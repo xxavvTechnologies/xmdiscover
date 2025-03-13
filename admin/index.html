@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-header-nav">
+        <nav class="admin-nav">
+            <div class="admin-logo">xM DiScover Admin</div>
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="playlists.html">Playlists</a>
+            <a href="albums.html">Albums</a>
+            <a href="songs.html">Songs</a>
+            <a href="artists.html">Artists</a>
+            <a href="exclusive.html">Exclusive Content</a>
+            <a href="../index.html">Return to Site</a>
+        </nav>
+    </div>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <div class="admin-header-actions">
+                <span class="admin-user">Admin User</span>
+                <button class="admin-btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h3>Total Playlists</h3>
+                <p class="admin-stat" data-stat="playlists">-</p>
+                <a href="playlists.html" class="admin-link">Manage Playlists</a>
+            </div>
+            <div class="admin-card">
+                <h3>Total Albums</h3>
+                <p class="admin-stat" data-stat="albums">-</p>
+                <a href="albums.html" class="admin-link">Manage Albums</a>
+            </div>
+            <div class="admin-card">
+                <h3>Total Songs</h3>
+                <p class="admin-stat" data-stat="songs">-</p>
+                <a href="songs.html" class="admin-link">Manage Songs</a>
+            </div>
+            <div class="admin-card">
+                <h3>Total Artists</h3>
+                <p class="admin-stat" data-stat="artists">-</p>
+                <a href="artists.html" class="admin-link">Manage Artists</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

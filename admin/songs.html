@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Songs - xM DiScover Admin</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-header-nav">
+        <nav class="admin-nav">
+            <div class="admin-logo">xM DiScover Admin</div>
+        <nav class="admin-nav">
+            <a href="index.html">Dashboard</a>
+            <a href="playlists.html">Playlists</a>
+            <a href="albums.html">Albums</a>
+            <a href="songs.html" class="active">Songs</a>
+            <a href="artists.html">Artists</a>
+            <a href="exclusive.html">Exclusive Content</a>
+            <a href="../index.html">Return to Site</a>
+        </nav>
+    </div>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Manage Songs</h1>
+            <div class="admin-header-actions">
+                <button class="admin-btn" data-action="create" data-type="song">Add New Song</button>
+            </div>
+        </header>
+
+        <div class="admin-filters">
+            <input type="text" placeholder="Search songs..." class="admin-search">
+            <select class="admin-select">
+                <option value="">All Artists</option>
+            </select>
+            <select class="admin-select">
+                <option value="">All Albums</option>
+            </select>
+        </div>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Album</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Example Song</td>
+                    <td>Artist Name</td>
+                    <td>Album Name</td>
+                    <td>3:45</td>
+                    <td class="admin-actions">
+                        <button class="admin-btn" data-action="edit" data-id="1">Edit</button>
+                        <button class="admin-btn" data-action="delete" data-id="1">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

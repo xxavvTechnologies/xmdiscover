@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="auth.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="auth.js"></script>
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-logo">xM DiScover</div>
+        <div class="auth-card">
+            <h1>Login</h1>
+            <!-- Login Form -->
+            <div class="auth-form-container login-form-container">
+                <form class="auth-form login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="auth-button">Log In</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" data-form="forgot">Forgot Password?</a>
+                    <span class="divider">•</span>
+                    <a href="#" data-form="signup">Sign Up</a>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div class="auth-form-container signup-form-container" style="display: none;">
+                <form class="auth-form signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required minlength="6">
+                    </div>
+                    <button type="submit" class="auth-button">Create Account</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" data-form="login">Back to Login</a>
+                </div>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div class="auth-form-container forgot-form-container" style="display: none;">
+                <form class="auth-form forgot-form">
+                    <div class="form-group">
+                        <label for="forgot-email">Email</label>
+                        <input type="email" id="forgot-email" required>
+                    </div>
+                    <button type="submit" class="auth-button">Send Reset Link</button>
+                </form>
+                <div class="auth-links">
+                    <a href="#" data-form="login">Back to Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

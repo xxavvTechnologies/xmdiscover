@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Playlists - xM DiScover Admin</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-header-nav">
+        <nav class="admin-nav">
+            <div class="admin-logo">xM DiScover Admin</div>
+        <nav class="admin-nav">
+            <a href="index.html">Dashboard</a>
+            <a href="playlists.html" class="active">Playlists</a>
+            <a href="albums.html">Albums</a>
+            <a href="songs.html">Songs</a>
+            <a href="artists.html">Artists</a>
+            <a href="exclusive.html">Exclusive Content</a>
+            <a href="../index.html">Return to Site</a>
+        </nav>
+    </div>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Manage Playlists</h1>
+            <div class="admin-header-actions">
+                <button class="admin-btn" data-action="create" data-type="playlist">Add New Playlist</button>
+            </div>
+        </header>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Songs</th>
+                    <th>Creator</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Top Hits 2024</td>
+                    <td>50</td>
+                    <td>System</td>
+                    <td>Published</td>
+                    <td class="admin-actions">
+                        <button class="admin-btn" data-action="edit" data-id="1">Edit</button>
+                        <button class="admin-btn" data-action="delete" data-id="1">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

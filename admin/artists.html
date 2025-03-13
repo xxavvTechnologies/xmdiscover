@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Artists - xM DiScover Admin</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-header-nav">
+        <nav class="admin-nav">
+            <div class="admin-logo">xM DiScover Admin</div>
+        <nav class="admin-nav">
+            <a href="index.html">Dashboard</a>
+            <a href="playlists.html">Playlists</a>
+            <a href="albums.html">Albums</a>
+            <a href="songs.html">Songs</a>
+            <a href="artists.html" class="active">Artists</a>
+            <a href="exclusive.html">Exclusive Content</a>
+            <a href="../index.html">Return to Site</a>
+        </nav>
+    </div>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Manage Artists</h1>
+            <div class="admin-header-actions">
+                <button class="admin-btn" data-action="create" data-type="artist">Add New Artist</button>
+            </div>
+        </header>
+
+        <div class="admin-filters">
+            <input type="text" placeholder="Search artists..." class="admin-search">
+            <select class="admin-select">
+                <option value="">All Genres</option>
+            </select>
+            <select class="admin-select">
+                <option value="">Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+
+        <div class="admin-grid">
+            <div class="admin-artist-card">
+                <div class="admin-artist-image"></div>
+                <div class="admin-artist-info">
+                    <h3>Artist Name</h3>
+                    <p>Genre: Pop, Electronic</p>
+                    <p>Albums: 3</p>
+                    <p>Total Songs: 35</p>
+                </div>
+                <div class="admin-actions">
+                    <button class="admin-btn" data-action="edit" data-id="1">Edit</button>
+                    <button class="admin-btn" data-action="delete" data-id="1">Delete</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

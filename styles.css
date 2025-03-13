@@ -12,7 +12,7 @@ body {
     font-family: 'DM Sans', sans-serif;
     font-weight: 400;
     line-height: 1.6;
-    background: #121212;
+    background: #0a0014;
     color: #ffffff;
 }
 
@@ -23,7 +23,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 nav {
-    background: #000000;
+    background: rgba(10, 0, 20, 0.8);
+    backdrop-filter: blur(10px);
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
@@ -32,14 +33,17 @@ nav {
     width: 100%;
     top: 0;
     z-index: 100;
+    border-bottom: 1px solid rgba(140, 82, 255, 0.1);
 }
 
-/*this app is actually made by xxavvMusik in coordination with xxavvTechnologies. also make the footer more detailed. actually ykw can you make the header and footer components that get dynamically added into each page?*/
-
 .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #8c52ff;
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
 }
 
 nav ul {
@@ -50,25 +54,69 @@ nav ul {
 nav ul li a {
     color: #ffffff;
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.2rem;
     margin: 0 0.5rem;
-    border-radius: 20px;
-    transition: background 0.3s;
+    border-radius: 8px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
 }
 
-nav ul li a:hover, nav ul li a.active {
-    background: #8c52ff;
+nav ul li a:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+nav ul li a:hover:before,
+nav ul li a.active:before {
+    opacity: 1;
+}
+
+nav ul li a.login-btn {
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    border: none;
+}
+
+nav ul li a.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(140, 82, 255, 0.3);
 }
 
 .hero {
-    height: 60vh;
+    height: 70vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(to bottom, #8c52ff, #121212);
+    background: radial-gradient(circle at top, #8c52ff 0%, #0a0014 70%);
     text-align: center;
     padding-top: 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero:before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: url('data:image/svg+xml,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="%238c52ff" opacity="0.03"/></svg>');
+    background-size: 50px 50px;
+    animation: moveBackground 30s linear infinite;
+    opacity: 0.5;
+}
+
+@keyframes moveBackground {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
 }
 
 .hero h1 {
@@ -96,23 +144,39 @@ main {
 }
 
 .playlist-card {
-    background: #282828;
-    padding: 1rem;
-    border-radius: 8px;
-    transition: transform 0.3s;
+    background: rgba(40, 40, 40, 0.5);
+    padding: 1.5rem;
+    border-radius: 16px;
+    transition: all 0.3s;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
 .playlist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(140, 82, 255, 0.3);
+    transform: translateY(-5px) scale(1.02);
+    border-color: rgba(140, 82, 255, 0.3);
+    box-shadow: 0 10px 20px rgba(140, 82, 255, 0.15);
 }
 
 .playlist-img {
-    background: #333;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
     width: 100%;
     padding-bottom: 100%;
     margin-bottom: 1rem;
-    border-radius: 4px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.playlist-img:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 25L75 75L25 75Z" fill="%23ffffff" opacity="0.1"/></svg>');
+    background-size: cover;
 }
 
 .playlist-card h3 {
@@ -125,8 +189,25 @@ main {
 }
 
 footer {
-    text-align: center;
-    padding: 2rem;
+    text-align: left;
+    padding: 3rem 2rem;
     background: #282828;
     margin-top: 2rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.footer-section h4 {
+    color: #8c52ff;
+    margin-bottom: 1rem;
+}
+
+.footer-section p {
+    color: #b3b3b3;
 }

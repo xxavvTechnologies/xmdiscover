@@ -126,10 +126,13 @@ nav ul li a.login-btn:hover {
 
 main {
     padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .featured {
     margin-top: 2rem;
+    max-width: 100%;
 }
 
 .featured h2 {
@@ -139,8 +142,9 @@ main {
 
 .playlist-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 100%;
 }
 
 .playlist-card {
@@ -150,6 +154,9 @@ main {
     transition: all 0.3s;
     border: 1px solid rgba(140, 82, 255, 0.1);
     backdrop-filter: blur(10px);
+    max-width: 300px;
+    justify-self: center;
+    width: 100%;
 }
 
 .playlist-card:hover {
@@ -210,4 +217,358 @@ footer {
 
 .footer-section p {
     color: #b3b3b3;
+}
+
+/* Profile Menu Styles */
+.profile-menu {
+    position: relative;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    border: none;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+}
+
+.profile-name {
+    font-size: 0.9rem;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    min-width: 150px;
+    display: none;
+    flex-direction: column;
+    gap: 0.25rem;
+    backdrop-filter: blur(10px);
+}
+
+.profile-menu.active .profile-dropdown {
+    display: flex;
+}
+
+.profile-dropdown a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.profile-dropdown a:hover {
+    background: rgba(140, 82, 255, 0.1);
+}
+
+.logout-btn {
+    color: #ff6b6b !important;
+}
+
+/* Welcome Section */
+.welcome {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(140, 82, 255, 0.1);
+    border-radius: 20px;
+    margin: 2rem auto;
+    max-width: 800px;
+}
+
+.welcome h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcome p {
+    color: #b3b3b3;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.welcome-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.discover-btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.discover-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(140, 82, 255, 0.3);
+}
+
+/* Artist Grid */
+.artist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+    max-width: 100%;
+}
+
+.artist-card {
+    background: rgba(40, 40, 40, 0.5);
+    padding: 1.5rem;
+    border-radius: 16px;
+    transition: all 0.3s;
+    text-align: center;
+    cursor: pointer;
+    max-width: 200px;
+    justify-self: center;
+    width: 100%;
+}
+
+.artist-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background-size: cover;
+    background-position: center;
+}
+
+.artist-card:hover {
+    transform: translateY(-5px);
+    background: rgba(140, 82, 255, 0.1);
+}
+
+/* Media queries for responsive design */
+@media (min-width: 1600px) {
+    .playlist-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .artist-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .playlist-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    
+    .artist-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    
+    .playlist-card, .artist-card {
+        max-width: none;
+    }
+}
+
+/* Player Styles */
+.player-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+}
+
+.player {
+    background: rgba(20, 0, 40, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(140, 82, 255, 0.1);
+    width: 100%;
+    padding: 1rem;
+}
+
+.player-main {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.player-current {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.current-cover {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+}
+
+.current-info h4 {
+    color: white;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.current-info p {
+    color: #b3b3b3;
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.player-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.control-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.control-btn:hover {
+    background: rgba(140, 82, 255, 0.1);
+}
+
+.play-pause {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+}
+
+.player-progress {
+    position: absolute;
+    top: -0.5rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.progress-current {
+    height: 100%;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    border-radius: 2px;
+    width: 0%;
+}
+
+.time-current, .time-total {
+    color: #b3b3b3;
+    font-size: 0.8rem;
+}
+
+.player-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.action-btn:hover {
+    background: rgba(140, 82, 255, 0.1);
+}
+
+/* Sidebar Styles */
+.player-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: rgba(20, 0, 40, 0.98);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(140, 82, 255, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.player-sidebar.active {
+    right: 0;
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(140, 82, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.close-sidebar {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.sidebar-panels {
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.panel {
+    display: none;
+    padding: 1.5rem;
+}
+
+.panel.active {
+    display: block;
+}
+
+.panel h3 {
+    color: white;
+    margin-bottom: 1rem;
 }

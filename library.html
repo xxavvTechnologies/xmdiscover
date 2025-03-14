@@ -5,30 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library - xM DiScover</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <main>
         <section class="featured">
             <h2>Your Playlists</h2>
+            <div class="playlist-grid" data-content="my-playlists"></div>
+        </section>
+
+        <section class="featured">
+            <h2>System Playlists</h2>
             <div class="playlist-grid">
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
+                <div class="playlist-card" data-content="liked-songs">
+                    <div class="playlist-img gradient-purple"></div>
                     <h3>Liked Songs</h3>
-                    <p>Your favorite tracks</p>
+                    <p class="song-count">0 liked songs</p>
                 </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
+                <div class="playlist-card" data-content="recently-played">
+                    <div class="playlist-img gradient-blue"></div>
                     <h3>Recently Played</h3>
-                    <p>Your listening history</p>
-                </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Custom Mix</h3>
-                    <p>Your personal playlist</p>
+                    <p class="song-count">0 tracks</p>
                 </div>
             </div>
         </section>
     </main>
-    <script src="js/components.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/components.js"></script>
+    <script type="module" src="js/library.js"></script>
 </body>
 </html>

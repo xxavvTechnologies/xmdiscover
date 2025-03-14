@@ -1,5 +1,16 @@
 import { auth, supabase } from '../js/supabase.js';
 
+// Check if already authenticated first
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+        console.log('Already authenticated, redirecting...');
+        window.location.href = '/index.html';
+        return true;
+    }
+    return false;
+}
+
 // Debounce function to prevent rapid repeated submissions
 function debounce(func, wait) {
     let timeout;
@@ -14,7 +25,10 @@ function debounce(func, wait) {
     };
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check auth status first
+    if (await checkAuth()) return;
+
     // Get form containers
     const loginFormContainer = document.querySelector('.login-form-container');
     const signupFormContainer = document.querySelector('.signup-form-container');

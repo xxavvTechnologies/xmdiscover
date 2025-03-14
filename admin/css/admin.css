@@ -2,59 +2,86 @@
     display: block;
     min-height: 100vh;
     background: #0a0014;
-    padding-top: 120px; /* Account for main nav + admin nav */
+    padding-top: 60px;
 }
 
+/* Header Navigation */
 .admin-header-nav {
     background: rgba(20, 0, 40, 0.95);
     backdrop-filter: blur(10px);
-    padding: 1rem 2rem;
     border-bottom: 1px solid rgba(140, 82, 255, 0.1);
     position: fixed;
     width: 100%;
-    top: 60px; /* Position below main nav */
+    top: 0;
+    left: 0;
     z-index: 99;
 }
 
-.admin-nav {
+.admin-nav-container {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    max-width: 1200px;
+    justify-content: space-between;
+    padding: 0.4rem 2rem;  /* Increased horizontal padding */
+    max-width: 1600px;     /* Adjusted to match new layout */
     margin: 0 auto;
 }
 
-.admin-nav a {
-    color: #fff;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    transition: all 0.3s;
-    font-size: 0.9rem;
+/* Simplify left side with inline links */
+.admin-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
 
-.admin-nav a:hover,
-.admin-nav a.active {
+.admin-nav-left a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+}
+
+.admin-nav-left a:hover,
+.admin-nav-left a.active {
     background: rgba(140, 82, 255, 0.1);
     color: #8c52ff;
 }
 
-.admin-main {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Remove redundant nav container */
+.admin-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Right side actions */
+.admin-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .admin-logo {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 800;
     background: linear-gradient(45deg, #8c52ff, #ff6b6b);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 2rem;
 }
 
+/* Main Content Area */
+.admin-main {
+    padding: 2rem;
+    max-width: 1400px;  /* Reduced from 1800px */
+    margin: 2rem auto;   /* Added margin-top/bottom */
+    background: rgba(20, 0, 40, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Header Section */
 .admin-header {
     display: flex;
     justify-content: space-between;
@@ -62,6 +89,12 @@
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid rgba(140, 82, 255, 0.1);
+}
+
+.admin-header h1 {
+    font-size: 2rem;
+    color: #fff;
+    margin: 0;
 }
 
 .admin-header-actions {
@@ -72,6 +105,7 @@
 
 .admin-user {
     color: #b3b3b3;
+    font-size: 0.9rem;
 }
 
 .admin-btn {

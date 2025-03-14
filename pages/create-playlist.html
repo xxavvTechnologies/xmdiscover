@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Playlist - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <main>
+        <div class="create-playlist">
+            <h1>Create New Playlist</h1>
+            <form id="playlist-form" class="playlist-form">
+                <div class="form-group">
+                    <label for="playlist-name">Playlist Name</label>
+                    <input type="text" id="playlist-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="playlist-description">Description (optional)</label>
+                    <textarea id="playlist-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="playlist-cover">Cover Image (optional)</label>
+                    <input type="file" id="playlist-cover" accept="image/*">
+                    <div class="cover-preview"></div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="playlist-public" checked>
+                        Make this playlist public
+                    </label>
+                </div>
+                <button type="submit" class="submit-btn">Create Playlist</button>
+            </form>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/create-playlist.js"></script>
+</body>
+</html>

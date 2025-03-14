@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <main>
+        <div class="playlist-header">
+            <div class="playlist-cover">
+                <div class="playlist-image"></div>
+            </div>
+            <div class="playlist-info">
+                <span class="playlist-type">Playlist</span>
+                <h1 class="playlist-title">Loading...</h1>
+                <p class="playlist-creator"></p>
+                <p class="playlist-meta">
+                    <span class="playlist-tracks"></span>
+                </p>
+            </div>
+        </div>
+
+        <section class="playlist-tracks">
+            <div class="track-list"></div>
+        </section>
+
+        <section class="similar-playlists">
+            <h2>Similar Playlists</h2>
+            <div class="playlist-grid"></div>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/playlist.js"></script>
+</body>
+</html>

@@ -11,24 +11,33 @@
 </head>
 <body class="admin-body">
     <div class="admin-header-nav">
-        <nav class="admin-nav">
-            <div class="admin-logo">xM DiScover Admin</div>
-        <nav class="admin-nav">
-            <a href="index.html">Dashboard</a>
-            <a href="playlists.html">Playlists</a>
-            <a href="albums.html">Albums</a>
-            <a href="songs.html" class="active">Songs</a>
-            <a href="artists.html">Artists</a>
-            <a href="exclusive.html">Exclusive Content</a>
-            <a href="../index.html">Return to Site</a>
-        </nav>
+        <div class="admin-nav-container">
+            <div class="admin-nav-left">
+                <div class="admin-logo">xM DiScover</div>
+                    <a href="index.html">Dashboard</a>
+                    <a href="playlists.html">Playlists</a>
+                    <a href="albums.html">Albums</a>
+                    <a href="songs.html" class="active">Songs</a>
+                    <a href="artists.html">Artists</a>
+                    <a href="exclusive.html">Exclusive</a>
+            </div>
+            <div class="admin-nav-right">
+                <span class="admin-user" data-admin-user>Admin User</span>
+                <button class="admin-btn" data-action="logout">Logout</button>
+                <a href="../index.html" class="admin-btn">Return to Site</a>
+            </div>
+        </div>
     </div>
 
     <main class="admin-main">
         <header class="admin-header">
             <h1>Manage Songs</h1>
+            <button class="admin-btn" data-action="create" data-type="song">
+                Create Song
+            </button>
             <div class="admin-header-actions">
-                <button class="admin-btn" data-action="create" data-type="song">Add New Song</button>
+                <span class="admin-user" data-admin-user>Admin User</span>
+                <button class="admin-btn" data-action="logout">Logout</button>
             </div>
         </header>
 

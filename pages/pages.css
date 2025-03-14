@@ -1,0 +1,334 @@
+.artist-header {
+    display: flex;
+    align-items: flex-end;
+    padding: 2rem;
+    min-height: 300px;
+    background: linear-gradient(to bottom, rgba(140, 82, 255, 0.3), #0a0014);
+}
+
+.artist-image {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.artist-info {
+    flex: 1;
+}
+
+.artist-name {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.artist-genres {
+    color: #b3b3b3;
+    font-size: 1.1rem;
+}
+
+.artist-bio {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.bio-text {
+    color: #b3b3b3;
+    line-height: 1.8;
+}
+
+.release-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.track-list {
+    padding: 2rem;
+}
+
+.track-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: background 0.3s;
+    cursor: pointer;
+}
+
+.track-item:hover {
+    background: rgba(140, 82, 255, 0.1);
+}
+
+/* Release Page Styles */
+.release-header {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    min-height: 300px;
+    background: linear-gradient(to bottom, rgba(140, 82, 255, 0.3), #0a0014);
+}
+
+.release-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    margin-right: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.release-info {
+    flex: 1;
+}
+
+.release-type {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(140, 82, 255, 0.2);
+    border-radius: 4px;
+    color: #8c52ff;
+    margin-bottom: 1rem;
+}
+
+.release-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.release-artist a {
+    color: #8c52ff;
+    text-decoration: none;
+    font-size: 1.5rem;
+}
+
+.release-meta {
+    margin-top: 1rem;
+    color: #b3b3b3;
+}
+
+/* Track List Styles */
+.track-item {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.track-number {
+    color: #b3b3b3;
+    font-size: 0.9rem;
+}
+
+.track-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-info h4 {
+    margin: 0;
+    color: white;
+}
+
+.track-info p {
+    margin: 0;
+    color: #b3b3b3;
+    font-size: 0.9rem;
+}
+
+/* Release Grid Styles */
+.release-card {
+    background: rgba(20, 0, 40, 0.3);
+    padding: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    max-width: 200px;
+    justify-self: center;
+    width: 100%;
+}
+
+.release-img {
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 1rem;
+}
+
+.release-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.release-card p {
+    margin: 0.5rem 0 0;
+    color: #b3b3b3;
+    font-size: 0.9rem;
+}
+
+.release-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 0, 40, 0.5);
+}
+
+/* Playlist Grid Styles */
+.gradient-purple {
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b) !important;
+}
+
+.gradient-blue {
+    background: linear-gradient(45deg, #52a7ff, #8c52ff) !important;
+}
+
+/* Playlist Header Styles */
+.playlist-header {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    min-height: 300px;
+    background: linear-gradient(to bottom, rgba(140, 82, 255, 0.3), #0a0014);
+}
+
+.playlist-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    margin-right: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.playlist-info {
+    flex: 1;
+}
+
+.playlist-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.playlist-creator {
+    color: #8c52ff;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.playlist-description {
+    color: #b3b3b3;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Create Playlist Form Styles */
+.create-playlist {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(20, 0, 40, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+}
+
+.playlist-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #b3b3b3;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    padding: 0.75rem;
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    border-radius: 6px;
+    color: white;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.cover-preview {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    border-radius: 12px;
+    display: none;
+    background-size: cover;
+    background-position: center;
+}
+
+.submit-btn {
+    padding: 1rem;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(140, 82, 255, 0.3);
+}
+
+.submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.playlist-privacy {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(20, 0, 40, 0.8);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #b3b3b3;
+}
+
+/* Add responsive breakpoints */
+@media (min-width: 1600px) {
+    .release-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .release-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    
+    .release-card {
+        max-width: none;
+    }
+}

@@ -1,10 +1,26 @@
 <nav>
     <div class="logo">xM DiScover</div>
     <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="discover.html">Discover</a></li>
-        <li><a href="library.html">Library</a></li>
-        <li><a href="auth/login.html" class="login-btn">Login</a></li>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../discover.html">Discover</a></li>
+        <li><a href="../library.html">Library</a></li>
+        <li class="auth-item">
+            <!-- Login button (shown when logged out) -->
+            <a href="../auth/login.html" class="login-btn" data-auth="logged-out">Login</a>
+            
+            <!-- Profile menu (shown when logged in) -->
+            <div class="profile-menu" data-auth="logged-in" style="display: none;">
+                <button class="profile-trigger">
+                    <img src="" alt="" class="profile-avatar">
+                    <span class="profile-name"></span>
+                </button>
+                <div class="profile-dropdown">
+                    <a href="profile.html">Profile</a>
+                    <a href="settings.html">Settings</a>
+                    <a href="#" class="logout-btn">Logout</a>
+                </div>
+            </div>
+        </li>
     </ul>
 </nav>
 

@@ -5,30 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discover - xM DiScover</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <main>
         <section class="featured">
-            <h2>Recommended for You</h2>
-            <div class="playlist-grid">
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>New Releases</h3>
-                    <p>Fresh music this week</p>
-                </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Genre Mix</h3>
-                    <p>Based on your listening</p>
-                </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Artist Radio</h3>
-                    <p>Similar to your favorites</p>
-                </div>
-            </div>
+            <h2>New Releases</h2>
+            <div class="playlist-grid" data-content="new-releases"></div>
+        </section>
+        
+        <section class="featured">
+            <h2>Popular Artists</h2>
+            <div class="artist-grid" data-content="artists"></div>
+        </section>
+
+        <section class="featured">
+            <h2>Featured Playlists</h2>
+            <div class="playlist-grid" data-content="playlists"></div>
         </section>
     </main>
-    <script src="js/components.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/components.js"></script>
+    <script type="module" src="js/discover.js"></script>
 </body>
 </html>

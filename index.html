@@ -5,30 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xM DiScover - Your Music Journey</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <main>
         <section class="featured">
             <h2>Featured Playlists</h2>
-            <div class="playlist-grid">
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Top Hits 2024</h3>
-                    <p>The hottest tracks right now</p>
-                </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Chill Vibes</h3>
-                    <p>Relax and unwind</p>
-                </div>
-                <div class="playlist-card">
-                    <div class="playlist-img"></div>
-                    <h3>Workout Mix</h3>
-                    <p>Keep the energy high</p>
-                </div>
+            <div class="playlist-grid"></div>
+        </section>
+
+        <section class="welcome">
+            <h2>Welcome to xM DiScover</h2>
+            <p>Your journey through millions of tracks starts here. Discover new music, create playlists, and share your favorites.</p>
+            <div class="welcome-actions">
+                <a href="discover.html" class="discover-btn">Start Discovering</a>
             </div>
         </section>
     </main>
-    <script src="js/components.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/components.js"></script>
+    <script type="module" src="js/home.js"></script>
 </body>
 </html>

@@ -11,27 +11,28 @@
 </head>
 <body class="admin-body">
     <div class="admin-header-nav">
-        <nav class="admin-nav">
-            <div class="admin-logo">xM DiScover Admin</div>
-            <a href="index.html" class="active">Dashboard</a>
-            <a href="playlists.html">Playlists</a>
-            <a href="albums.html">Albums</a>
-            <a href="songs.html">Songs</a>
-            <a href="artists.html">Artists</a>
-            <a href="exclusive.html">Exclusive Content</a>
-            <a href="../index.html">Return to Site</a>
-        </nav>
+        <div class="admin-nav-container">
+            <div class="admin-nav-left">
+                <div class="admin-logo">xM DiScover</div>
+                <a href="index.html" class="active">Dashboard</a>
+                <a href="playlists.html">Playlists</a>
+                <a href="albums.html">Albums</a>
+                <a href="songs.html">Songs</a>
+                <a href="artists.html">Artists</a>
+                <a href="exclusive.html">Exclusive</a>
+            </div>
+            <div class="admin-nav-right">
+                <span class="admin-user" data-admin-user>Admin User</span>
+                <button class="admin-btn" data-action="logout">Logout</button>
+                <a href="../index.html" class="admin-btn">Return to Site</a>
+            </div>
+        </div>
     </div>
 
-    <main class="admin-main">
+    <main class="admin-main"></main>
         <header class="admin-header">
             <h1>Admin Dashboard</h1>
-            <div class="admin-header-actions">
-                <span class="admin-user">Admin User</span>
-                <button class="admin-btn">Logout</button>
-            </div>
         </header>
-
         <div class="admin-grid">
             <div class="admin-card">
                 <h3>Total Playlists</h3>

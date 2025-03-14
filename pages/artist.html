@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <main>
+        <div class="artist-header">
+            <div class="artist-cover">
+                <div class="artist-image"></div>
+            </div>
+            <div class="artist-info">
+                <h1 class="artist-name">Loading...</h1>
+                <p class="artist-genres"></p>
+            </div>
+        </div>
+
+        <section class="artist-bio">
+            <h2>About</h2>
+            <p class="bio-text"></p>
+        </section>
+
+        <section class="artist-releases">
+            <h2>Releases</h2>
+            <div class="release-grid"></div>
+        </section>
+
+        <section class="artist-tracks">
+            <h2>Popular Tracks</h2>
+            <div class="track-list"></div>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/artist.js"></script>
+</body>
+</html>

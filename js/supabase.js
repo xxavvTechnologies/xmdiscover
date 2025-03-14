@@ -8,15 +8,6 @@ export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON
     }
 });
 
-// Modify auth state change handler
-supabase.auth.onAuthStateChange((event, session) => {
-    // Only redirect on explicit sign out
-    if (event === 'SIGNED_OUT' && window.location.pathname.includes('/admin/')) {
-        console.log('Signed out, redirecting...');
-        setTimeout(() => window.location.href = '/auth/login.html', 1000);
-    }
-});
-
 export const auth = {
     async signUp(email, password) {
         const { data: { user }, error } = await supabase.auth.signUp({

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <main>
+        <div class="release-header">
+            <div class="release-cover">
+                <div class="release-image"></div>
+            </div>
+            <div class="release-info">
+                <span class="release-type">Album</span>
+                <h1 class="release-title">Loading...</h1>
+                <p class="release-artist">
+                    <a href="#" class="artist-link">Artist Name</a>
+                </p>
+                <p class="release-meta">
+                    <span class="release-year"></span>
+                    •
+                    <span class="release-tracks"></span>
+                </p>
+            </div>
+        </div>
+
+        <section class="release-tracks">
+            <div class="track-list"></div>
+        </section>
+
+        <section class="more-releases">
+            <h2>More from this Artist</h2>
+            <div class="release-grid"></div>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/release.js"></script>
+</body>
+</html>

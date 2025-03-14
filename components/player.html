@@ -1,0 +1,53 @@
+<div class="player-container">
+    <div class="player">
+        <div class="player-main">
+            <div class="player-current">
+                <img src="" alt="" class="current-cover">
+                <div class="current-info">
+                    <h4 class="current-title">Select a track</h4>
+                    <p class="current-artist">-</p>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button class="control-btn shuffle"><i class="fas fa-random"></i></button>
+                <button class="control-btn prev"><i class="fas fa-step-backward"></i></button>
+                <button class="control-btn play-pause"><i class="fas fa-play"></i></button>
+                <button class="control-btn next"><i class="fas fa-step-forward"></i></button>
+                <button class="control-btn repeat"><i class="fas fa-redo"></i></button>
+            </div>
+
+            <div class="player-progress">
+                <span class="time-current">0:00</span>
+                <div class="progress-bar">
+                    <div class="progress-current"></div>
+                </div>
+                <span class="time-total">0:00</span>
+            </div>
+
+            <div class="player-actions">
+                <button class="action-btn volume"><i class="fas fa-volume-up"></i></button>
+                <button class="action-btn queue" data-panel="queue"><i class="fas fa-list"></i></button>
+                <button class="action-btn lyrics" data-panel="lyrics"><i class="fas fa-microphone-alt"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="player-sidebar">
+        <div class="sidebar-header">
+            <button class="close-sidebar"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="sidebar-panels">
+            <div class="panel queue-panel" data-panel="queue">
+                <h3>Queue</h3>
+                <div class="queue-list"></div>
+            </div>
+            
+            <div class="panel lyrics-panel" data-panel="lyrics">
+                <h3>Lyrics</h3>
+                <div class="lyrics-content"></div>
+            </div>
+        </div>
+    </div>
+</div>

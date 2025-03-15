@@ -28,12 +28,29 @@ export async function searchSong(title, artist) {
 export async function getLyrics(url) {
     if (!url) return null;
     
-    try {
-        const response = await fetch(`/.netlify/functions/genius-proxy?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
-        return data.lyrics;
-    } catch (error) {
-        console.error('Failed to fetch lyrics:', error);
-        return null;
+    const maxRetries = 2;
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+        try {
+            const response = await fetch(`/.netlify/functions/genius-proxy?url=${encodeURIComponent(url)}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data.lyrics) {
+                throw new Error('No lyrics in response');
+            }
+            return data.lyrics;
+        } catch (error) {
+            console.warn(`Attempt ${retries + 1} failed:`, error);
+            retries++;
+            if (retries === maxRetries) {
+                throw error;
+            }
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
     }
+    return null;
 }

@@ -354,16 +354,22 @@ function initializePlayer() {
             const savedState = localStorage.getItem('playerState');
             if (savedState) {
                 const state = JSON.parse(savedState);
-                await this.playTrack(state.track, false); // Pass false to prevent autoplay
+                await this.playTrack(state.track, false); // Keep autoplay false
                 this.audioElement.currentTime = state.currentTime;
                 
-                if (state.isPlaying) {
-                    this.audioElement.play();
-                } else {
-                    const playIcon = document.querySelector('.play-pause i');
-                    playIcon?.classList.remove('fa-pause');
-                    playIcon?.classList.add('fa-play');
-                }
+                // Don't automatically play, just update UI
+                const playIcon = document.querySelector('.play-pause i');
+                playIcon?.classList.remove('fa-pause');
+                playIcon?.classList.add('fa-play');
+                
+                // Add click handler to start playback
+                const playBtn = document.querySelector('.play-pause');
+                const clickHandler = async () => {
+                    await this.audioElement.play();
+                    playIcon?.classList.replace('fa-play', 'fa-pause');
+                    playBtn.removeEventListener('click', clickHandler);
+                };
+                playBtn.addEventListener('click', clickHandler);
             }
         },
 

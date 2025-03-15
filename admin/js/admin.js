@@ -514,9 +514,10 @@ class AdminUI {
         const selectedIds = new Set();
 
         const updateSelectedSongs = () => {
-            selectedSongsInput.value = JSON.stringify([...selectedIds]);
+            selectedSongsInput.value = JSON.stringify(Array.from(selectedIds));
         };
 
+        // Add search input handler
         searchInput.addEventListener('input', async (e) => {
             const search = e.target.value;
             if (search.length < 2) {
@@ -529,8 +530,12 @@ class AdminUI {
                 .select(`
                     id,
                     title,
-                    artists (name),
-                    albums (title)
+                    artists (
+                        name
+                    ),
+                    albums (
+                        title
+                    )
                 `)
                 .ilike('title', `%${search}%`)
                 .eq('status', 'published')
@@ -538,20 +543,19 @@ class AdminUI {
 
             songList.innerHTML = songs?.map(song => `
                 <div class="song-item" data-id="${song.id}">
-                    <span>${song.title}</span>
-                    <span class="song-info">
-                        ${song.artists.name} - ${song.albums?.title || 'Single'}
-                    </span>
+                    <span class="song-title">${song.title}</span>
+                    <span class="song-info">${song.artists.name} - ${song.albums?.title || 'Single'}</span>
                 </div>
             `).join('') || '';
         });
 
+        // Handle song selection
         songList.addEventListener('click', (e) => {
             const songItem = e.target.closest('.song-item');
             if (!songItem) return;
 
             const songId = songItem.dataset.id;
-            const songTitle = songItem.querySelector('span').textContent;
+            const songTitle = songItem.querySelector('.song-title').textContent;
             const songInfo = songItem.querySelector('.song-info').textContent;
 
             if (!selectedIds.has(songId)) {
@@ -565,15 +569,15 @@ class AdminUI {
                 updateSelectedSongs();
             }
 
-            songList.innerHTML = '';
             searchInput.value = '';
+            songList.innerHTML = '';
         });
 
+        // Handle removing selected songs
         selectedSongs.addEventListener('click', (e) => {
             if (e.target.classList.contains('remove-song')) {
                 const songItem = e.target.closest('.selected-song');
-                const songId = songItem.dataset.id;
-                selectedIds.delete(songId);
+                selectedIds.delete(songItem.dataset.id);
                 songItem.remove();
                 updateSelectedSongs();
             }
@@ -626,6 +630,81 @@ class AdminUI {
     }
 
     async processFormData(formData, type) {
+        if (type === 'playlist') {
+            try {
+                // Get the system account ID
+                const { data: systemProfile } = await this.supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', 'xmdiscover')
+                    .single();
+
+                if (!systemProfile) throw new Error('System account not found');
+
+                // Handle cover image
+                const coverFile = formData.get('cover');
+                let coverUrl = formData.get('cover_url');
+
+                if (coverFile?.size > 0) {
+                    coverUrl = await uploadImage(coverFile, 'playlists');
+                }
+
+                // Get songs array - ensure it's properly formatted JSON
+                let songIds = [];
+                const songsInput = formData.get('songs');
+                if (songsInput) {
+                    try {
+                        songIds = JSON.parse(songsInput);
+                    } catch (e) {
+                        console.warn('Invalid songs input:', songsInput);
+                        throw new Error('Invalid song selection format');
+                    }
+                }
+
+                if (!songIds.length) {
+                    throw new Error('Please select at least one song');
+                }
+
+                // Create playlist first
+                const playlistData = {
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    cover_url: coverUrl || 'https://d2zcpib8duehag.cloudfront.net/xmdiscover-default-playlist.png',
+                    creator_id: systemProfile.id,
+                    featured: formData.get('featured') === 'on',
+                    status: formData.get('status') || 'published',
+                    is_public: true
+                };
+
+                const { data: playlist, error } = await this.supabase
+                    .from('playlists')
+                    .insert([playlistData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // Then add songs
+                const playlistSongs = songIds.map((songId, index) => ({
+                    playlist_id: playlist.id,
+                    song_id: songId,
+                    position: index
+                }));
+
+                const { error: songError } = await this.supabase
+                    .from('playlist_songs')
+                    .insert(playlistSongs);
+
+                if (songError) throw songError;
+
+                return playlist;
+            } catch (error) {
+                console.error('Playlist creation error:', error);
+                throw error;
+            }
+        }
+
+        // Handle other types...
         let processed = {};
 
         try {

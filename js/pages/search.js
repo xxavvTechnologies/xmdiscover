@@ -255,6 +255,78 @@ class SearchPage {
         `).join('');
         
         section.style.display = 'block';
+        
+        // Add click handlers for songs
+        container.querySelectorAll('.track-item').forEach(track => {
+            track.addEventListener('click', () => {
+                const songId = track.dataset.id;
+                const song = songs.find(s => s.id === songId);
+                if (song) {
+                    const playEvent = new CustomEvent('xm-play-track', {
+                        detail: {
+                            id: song.id,
+                            title: song.title,
+                            artist: song.artists.name,
+                            audioUrl: song.audio_url,
+                            coverUrl: song.cover_url,
+                            artistId: song.artist_id
+                        }
+                    });
+                    document.dispatchEvent(playEvent);
+                }
+            });
+        });
+    }
+
+    displayAlbums(albums) {
+        if (albums.length === 0) return;
+        
+        const section = document.querySelector('.albums-section');
+        const container = section.querySelector('.album-grid');
+        
+        container.innerHTML = albums.map(album => `
+            <div class="release-card" onclick="window.location.href='${getPagePath('/pages/release')}?id=${album.id}'">
+                <div class="release-img" style="background-image: url('${album.cover_url}')"></div>
+                <h3>${album.title}</h3>
+                <p>${album.artists?.name || 'Unknown Artist'}</p>
+            </div>
+        `).join('');
+        
+        section.style.display = 'block';
+    }
+
+    displayPlaylists(playlists) {
+        if (playlists.length === 0) return;
+        
+        const section = document.querySelector('.playlists-section');
+        const container = section.querySelector('.playlist-grid');
+        
+        container.innerHTML = playlists.map(playlist => `
+            <div class="playlist-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${playlist.id}'">
+                <div class="playlist-img" style="background-image: url('${playlist.cover_url}')"></div>
+                <h3>${playlist.name}</h3>
+                <p>By ${playlist.profiles?.display_name || playlist.profiles?.username || 'Unknown'}</p>
+            </div>
+        `).join('');
+        
+        section.style.display = 'block';
+    }
+
+    displayUsers(users) {
+        if (users.length === 0) return;
+        
+        const section = document.querySelector('.users-section');
+        const container = section.querySelector('.user-grid');
+        
+        container.innerHTML = users.map(user => `
+            <div class="user-card" onclick="window.location.href='${getPagePath('/pages/profile')}?id=${user.id}'">
+                <div class="user-avatar" style="background-image: url('${user.avatar_url || 'https://d2zcpib8duehag.cloudfront.net/xmdiscover-default-user.png'}')"></div>
+                <h3>${user.display_name || user.username}</h3>
+                <p>@${user.username}</p>
+            </div>
+        `).join('');
+        
+        section.style.display = 'block';
     }
 
     clearResults() {

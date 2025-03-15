@@ -588,3 +588,47 @@
     color: white;
     margin-bottom: 1rem;
 }
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.user-card {
+    background: rgba(20, 0, 40, 0.3);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.user-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 0, 40, 0.5);
+    border-color: rgba(140, 82, 255, 0.3);
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    background-size: cover;
+    background-position: center;
+}
+
+.user-card h3 {
+    margin: 0;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.user-card p {
+    margin: 0.5rem 0 0;
+    color: #8c52ff;
+    font-size: 0.9rem;
+}

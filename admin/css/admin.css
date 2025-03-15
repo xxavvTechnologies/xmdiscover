@@ -410,6 +410,12 @@
     background: rgba(140, 82, 255, 0.1);
 }
 
+.song-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .song-title {
     color: white;
     font-weight: 500;
@@ -417,7 +423,12 @@
 
 .song-info {
     color: #8c52ff;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+}
+
+.song-duration {
+    color: #b3b3b3;
+    font-size: 0.85rem;
 }
 
 .selected-songs {

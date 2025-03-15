@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+</head>
+<body>
+    <main>
+        <div class="search-container">
+            <div class="search-header">
+                <div class="search-input-wrapper">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="search-input" placeholder="Search for artists, songs, albums, playlists, users...">
+                </div>
+                <div class="search-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="artists">Artists</button>
+                    <button class="filter-btn" data-filter="songs">Songs</button>
+                    <button class="filter-btn" data-filter="albums">Albums</button>
+                    <button class="filter-btn" data-filter="playlists">Playlists</button>
+                    <button class="filter-btn" data-filter="users">Users</button>
+                </div>
+            </div>
+
+            <div class="search-results">
+                <!-- Top Result -->
+                <section class="top-result" style="display: none">
+                    <h2>Top Result</h2>
+                    <div class="top-result-content"></div>
+                </section>
+
+                <!-- Artists -->
+                <section class="result-section artists-section" style="display: none">
+                    <h2>Artists</h2>
+                    <div class="result-grid artist-grid"></div>
+                </section>
+
+                <!-- Songs -->
+                <section class="result-section songs-section" style="display: none">
+                    <h2>Songs</h2>
+                    <div class="track-list"></div>
+                </section>
+
+                <!-- Albums -->
+                <section class="result-section albums-section" style="display: none">
+                    <h2>Albums</h2>
+                    <div class="result-grid album-grid"></div>
+                </section>
+
+                <!-- Playlists -->
+                <section class="result-section playlists-section" style="display: none">
+                    <h2>Playlists</h2>
+                    <div class="result-grid playlist-grid"></div>
+                </section>
+
+                <!-- Users -->
+                <section class="result-section users-section" style="display: none">
+                    <h2>Users</h2>
+                    <div class="result-grid user-grid"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/search.js"></script>
+</body>
+</html>

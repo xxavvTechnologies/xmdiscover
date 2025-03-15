@@ -474,3 +474,117 @@
         max-width: none;
     }
 }
+
+/* Search Page Styles */
+.search-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.search-header {
+    margin-bottom: 2rem;
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.search-input-wrapper i {
+    color: #8c52ff;
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+}
+
+#search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+}
+
+#search-input:focus {
+    outline: none;
+}
+
+.search-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(140, 82, 255, 0.3);
+    background: none;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: rgba(140, 82, 255, 0.2);
+    border-color: #8c52ff;
+}
+
+.top-result {
+    margin-bottom: 3rem;
+}
+
+.top-result-card {
+    background: rgba(20, 0, 40, 0.95);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+    max-width: 300px;
+}
+
+.top-result-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 0, 40, 0.8);
+    border-color: rgba(140, 82, 255, 0.3);
+}
+
+.result-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 1rem;
+}
+
+.top-result-card.artist .result-image {
+    border-radius: 50%;
+}
+
+.top-result-card h3 {
+    margin: 0;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.top-result-card p {
+    margin: 0.5rem 0 0;
+    color: #8c52ff;
+}
+
+.result-section {
+    margin-bottom: 2rem;
+}
+
+.result-section h2 {
+    color: white;
+    margin-bottom: 1rem;
+}

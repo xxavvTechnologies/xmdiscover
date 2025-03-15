@@ -306,7 +306,8 @@ class AdminUI {
                 { name: 'artist_id', label: 'Artist', type: 'select', required: true, 
                   optionsLoader: () => this.loadArtistOptions() },
                 { name: 'cover', label: 'Album Cover', type: 'file', accept: 'image/*' },
-                { name: 'release_date', label: 'Release Date', type: 'date', required: true }
+                { name: 'release_date', label: 'Release Date', type: 'date', required: true },
+                { name: 'songs', label: 'Album Songs', type: 'song-selector', required: true }
             ],
             song: [
                 { name: 'title', label: 'Song Title', type: 'text', required: true },
@@ -483,7 +484,7 @@ class AdminUI {
         });
 
         // Add song selector component
-        if (type === 'playlist') {
+        if (type === 'playlist' || type === 'album') {
             const songSelector = `
                 <div class="song-selector">
                     <div class="song-search">
@@ -517,37 +518,55 @@ class AdminUI {
             selectedSongsInput.value = JSON.stringify(Array.from(selectedIds));
         };
 
-        // Add search input handler
         searchInput.addEventListener('input', async (e) => {
-            const search = e.target.value;
+            const search = e.target.value.trim();
             if (search.length < 2) {
                 songList.innerHTML = '';
                 return;
             }
 
-            const { data: songs } = await this.supabase
+            const queryBuilder = this.supabase
                 .from('songs')
                 .select(`
                     id,
                     title,
-                    artists (
-                        name
-                    ),
-                    albums (
-                        title
-                    )
+                    duration,
+                    artists (name),
+                    albums (title)
                 `)
                 .ilike('title', `%${search}%`)
-                .eq('status', 'published')
-                .limit(10);
+                .eq('status', 'published');
+
+            // If we're in an album form, only show songs by the selected artist
+            const artistSelect = form.querySelector('[name="artist_id"]');
+            if (artistSelect && artistSelect.value) {
+                queryBuilder.eq('artist_id', artistSelect.value);
+            }
+
+            const { data: songs } = await queryBuilder.limit(10);
 
             songList.innerHTML = songs?.map(song => `
                 <div class="song-item" data-id="${song.id}">
-                    <span class="song-title">${song.title}</span>
-                    <span class="song-info">${song.artists.name} - ${song.albums?.title || 'Single'}</span>
+                    <div class="song-item-info">
+                        <span class="song-title">${song.title}</span>
+                        <span class="song-info">${song.artists.name} ${song.albums?.title ? `- ${song.albums.title}` : ''}</span>
+                    </div>
+                    <span class="song-duration">${song.duration || ''}</span>
                 </div>
             `).join('') || '';
         });
+
+        // For albums, update song search when artist changes
+        const artistSelect = form.querySelector('[name="artist_id"]');
+        if (artistSelect) {
+            artistSelect.addEventListener('change', () => {
+                songList.innerHTML = '';
+                searchInput.value = '';
+                selectedIds.clear();
+                selectedSongs.innerHTML = '';
+                updateSelectedSongs();
+            });
+        }
 
         // Handle song selection
         songList.addEventListener('click', (e) => {
@@ -630,6 +649,62 @@ class AdminUI {
     }
 
     async processFormData(formData, type) {
+        if (type === 'album') {
+            try {
+                // Handle cover image upload
+                const coverFile = formData.get('cover');
+                let coverUrl = null;
+
+                if (coverFile?.size > 0) {
+                    coverUrl = await uploadImage(coverFile, 'albums');
+                }
+
+                // Get songs array
+                let songIds = [];
+                const songsInput = formData.get('songs');
+                if (songsInput) {
+                    try {
+                        songIds = JSON.parse(songsInput);
+                    } catch (e) {
+                        console.warn('Invalid songs input:', songsInput);
+                        throw new Error('Invalid song selection format');
+                    }
+                }
+
+                // Create album
+                const albumData = {
+                    title: formData.get('title'),
+                    artist_id: formData.get('artist_id'),
+                    cover_url: coverUrl,
+                    release_date: formData.get('release_date'),
+                    status: 'published'
+                };
+
+                const { data: album, error } = await this.supabase
+                    .from('albums')
+                    .insert([albumData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // Update songs with album_id
+                if (songIds.length > 0) {
+                    const { error: updateError } = await this.supabase
+                        .from('songs')
+                        .update({ album_id: album.id })
+                        .in('id', songIds);
+
+                    if (updateError) throw updateError;
+                }
+
+                return album;
+            } catch (error) {
+                console.error('Album creation error:', error);
+                throw error;
+            }
+        }
+
         if (type === 'playlist') {
             try {
                 // Get the system account ID

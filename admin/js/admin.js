@@ -333,6 +333,37 @@ class AdminUI {
                 { name: 'cover', label: 'Song Cover', type: 'file', accept: 'image/*' },
                 { name: 'audio', label: 'Audio File', type: 'file', accept: 'audio/*', required: true },
                 { name: 'duration', label: 'Duration', type: 'text', required: true }
+            ],
+            playlist: [
+                {
+                    name: 'name',
+                    label: 'Name',
+                    type: 'text',
+                    required: true
+                },
+                {
+                    name: 'description',
+                    label: 'Description',
+                    type: 'textarea'
+                },
+                {
+                    name: 'cover_url',
+                    label: 'Cover Image URL',
+                    type: 'text'
+                },
+                {
+                    name: 'is_public',
+                    label: 'Public',
+                    type: 'checkbox',
+                    default: true
+                },
+                {
+                    name: 'status',
+                    label: 'Status',
+                    type: 'select',
+                    options: ['draft', 'published'],
+                    default: 'published'
+                }
             ]
         };
         return fields[type] || [];
@@ -536,6 +567,10 @@ class AdminUI {
             // Add status if not present
             if (!processed.status) {
                 processed.status = 'published';
+            }
+
+            if (type === 'playlist') {
+                processed.creator_id = (await this.supabase.auth.getSession()).data.session?.user?.id;
             }
 
             console.log('Processed form data:', processed);

@@ -8,6 +8,14 @@ export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON
     }
 });
 
+// Helper for consistent URL handling
+export function getPagePath(path) {
+    // Handle both with and without .html
+    const basePath = path.replace(/\.html$/, '');
+    // Add leading slash if missing
+    return basePath.startsWith('/') ? basePath : '/' + basePath;
+}
+
 export const auth = {
     async signUp(email, password) {
         const { data: { user }, error } = await supabase.auth.signUp({
@@ -29,6 +37,7 @@ export const auth = {
             if (profileError) throw profileError;
         }
         
+        window.location.href = getPagePath('/index');
         return user;
     },
 
@@ -38,12 +47,14 @@ export const auth = {
             password,
         });
         if (error) throw error;
+        window.location.href = getPagePath('/index');
         return data;
     },
 
     async signOut() {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
+        window.location.href = getPagePath('/auth/login');
     },
 
     async getSession() {

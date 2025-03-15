@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /discover
+Allow: /library
+Allow: /pages/artist
+Allow: /pages/playlist
+Allow: /pages/release
+
+Disallow: /auth/
+Disallow: /admin/
+
+Sitemap: https://xmdiscover.netlify.app/sitemap.xml

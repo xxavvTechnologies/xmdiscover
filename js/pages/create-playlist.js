@@ -26,7 +26,7 @@ class CreatePlaylistPage {
                 const formData = new FormData(this.form);
                 const coverFile = this.form.querySelector('#playlist-cover').files[0];
 
-                let coverUrl = null;
+                let coverUrl = 'https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/playlist%20default%20cover.png'; // Default cover
                 if (coverFile) {
                     coverUrl = await uploadImage(coverFile, 'playlists');
                 }

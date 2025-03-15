@@ -5,17 +5,16 @@
         <li><a href="../discover.html">Discover</a></li>
         <li><a href="../library.html">Library</a></li>
         <li class="auth-item">
-            <!-- Login button (shown when logged out) -->
             <a href="../auth/login.html" class="login-btn" data-auth="logged-out">Login</a>
-            
-            <!-- Profile menu (shown when logged in) -->
             <div class="profile-menu" data-auth="logged-in" style="display: none;">
                 <button class="profile-trigger">
-                    <img src="" alt="" class="profile-avatar">
+                    <div class="nav-avatar">
+                        <img src="" alt="" class="profile-avatar">
+                    </div>
                     <span class="profile-name"></span>
                 </button>
                 <div class="profile-dropdown">
-                    <a href="profile.html">Profile</a>
+                    <a href="/pages/profile.html">Profile</a>
                     <a href="settings.html">Settings</a>
                     <a href="#" class="logout-btn">Logout</a>
                 </div>

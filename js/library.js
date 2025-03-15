@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import { supabase, getPagePath } from './supabase.js';
 
 class LibraryUI {
     constructor() {
@@ -9,7 +9,7 @@ class LibraryUI {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-            window.location.href = '/auth/login.html';
+            window.location.href = getPagePath('/auth/login');
             return;
         }
 
@@ -30,7 +30,7 @@ class LibraryUI {
         const container = document.querySelector('[data-content="my-playlists"]');
         if (container) {
             const createPlaylistBtn = `
-                <div class="playlist-card" onclick="window.location.href='/pages/create-playlist.html'">
+                <div class="playlist-card" onclick="window.location.href='${getPagePath('/pages/create-playlist')}'">
                     <div class="playlist-img gradient-purple">
                         <i class="fas fa-plus" style="font-size: 2rem; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
                     </div>
@@ -40,7 +40,7 @@ class LibraryUI {
             `;
 
             container.innerHTML = createPlaylistBtn + (playlists?.map(playlist => `
-                <div class="playlist-card" onclick="window.location.href='/pages/playlist.html?id=${playlist.id}'">
+                <div class="playlist-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${playlist.id}'">
                     <div class="playlist-img" style="background-image: url('${playlist.cover_url}')"></div>
                     <h3>${playlist.name}</h3>
                     <p>${playlist.description || `${playlist.playlist_songs[0]?.count || 0} songs`}</p>
@@ -54,12 +54,16 @@ class LibraryUI {
         const { data: likes } = await supabase
             .from('likes')
             .select(`
-                songs (
+                song_id,
+                created_at,
+                song:song_id (
                     id,
                     title,
                     duration,
                     cover_url,
-                    artists (name)
+                    artists (
+                        name
+                    )
                 )
             `)
             .eq('user_id', userId)
@@ -67,9 +71,13 @@ class LibraryUI {
 
         const container = document.querySelector('[data-content="liked-songs"]');
         if (container) {
+            container.style.cursor = 'pointer';
             container.onclick = () => {
-                window.location.href = '/pages/playlist.html?type=liked';
+                window.location.href = getPagePath('/pages/playlist') + '?type=liked';
             };
+            const img = container.querySelector('.playlist-img');
+            img.classList.remove('gradient-purple');
+            img.style.backgroundImage = `url('https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/your%20liked%20list.png')`;
             if (likes?.length > 0) {
                 container.querySelector('.song-count').textContent = `${likes.length} liked songs`;
             }
@@ -80,12 +88,12 @@ class LibraryUI {
         const { data: history } = await supabase
             .from('play_history')
             .select(`
-                songs (
+                songs!inner (
                     id,
                     title,
                     duration,
                     cover_url,
-                    artists (name)
+                    artists!inner (name)
                 )
             `)
             .eq('user_id', userId)
@@ -93,9 +101,13 @@ class LibraryUI {
 
         const container = document.querySelector('[data-content="recently-played"]');
         if (container) {
+            container.style.cursor = 'pointer';
             container.onclick = () => {
-                window.location.href = '/pages/playlist.html?type=recent';
+                window.location.href = getPagePath('/pages/playlist') + '?type=recent';
             };
+            const img = container.querySelector('.playlist-img');
+            img.classList.remove('gradient-blue');
+            img.style.backgroundImage = `url('https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/recently%20played.png')`;
             if (history?.length > 0) {
                 container.querySelector('.song-count').textContent = `${history.length} recently played`;
             }

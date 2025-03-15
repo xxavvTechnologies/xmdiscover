@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+</head>
+<body>
+    <main>
+        <div class="profile-header">
+            <div class="profile-cover">
+                <div class="profile-avatar" role="img" aria-label="Profile picture"></div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">Loading...</h1>
+                <p class="profile-username">@loading</p>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <section class="user-playlists">
+                <h2>Playlists</h2>
+                <div class="playlist-grid"></div>
+            </section>
+
+            <section class="liked-songs">
+                <h2>Liked Songs</h2>
+                <div class="track-list"></div>
+            </section>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/profile.js"></script>
+</body>
+</html>

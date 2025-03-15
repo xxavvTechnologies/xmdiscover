@@ -337,7 +337,7 @@ class AdminUI {
             playlist: [
                 {
                     name: 'name',
-                    label: 'Name',
+                    label: 'Playlist Name',
                     type: 'text',
                     required: true
                 },
@@ -347,21 +347,38 @@ class AdminUI {
                     type: 'textarea'
                 },
                 {
-                    name: 'cover_url',
-                    label: 'Cover Image URL',
-                    type: 'text'
+                    name: 'cover',
+                    label: 'Cover Image',
+                    type: 'file',
+                    accept: 'image/*',
+                    description: 'Upload an image or use URL below'
                 },
                 {
-                    name: 'is_public',
-                    label: 'Public',
+                    name: 'cover_url',
+                    label: 'Cover Image URL (optional)',
+                    type: 'text',
+                    placeholder: 'https://'
+                },
+                {
+                    name: 'songs',
+                    label: 'Songs',
+                    type: 'song-selector',
+                    required: true
+                },
+                {
+                    name: 'featured',
+                    label: 'Featured Playlist',
                     type: 'checkbox',
-                    default: true
+                    default: false
                 },
                 {
                     name: 'status',
                     label: 'Status',
                     type: 'select',
-                    options: ['draft', 'published'],
+                    options: [
+                        { value: 'published', label: 'Published' },
+                        { value: 'draft', label: 'Draft' }
+                    ],
                     default: 'published'
                 }
             ]
@@ -465,7 +482,102 @@ class AdminUI {
             }
         });
 
+        // Add song selector component
+        if (type === 'playlist') {
+            const songSelector = `
+                <div class="song-selector">
+                    <div class="song-search">
+                        <input type="text" placeholder="Search songs..." class="song-search-input">
+                    </div>
+                    <div class="song-list"></div>
+                    <div class="selected-songs"></div>
+                    <input type="hidden" name="songs" id="selected-songs-input">
+                </div>
+            `;
+
+            // Add song selector after form creation
+            const songField = form.querySelector('[data-field="songs"]');
+            if (songField) {
+                songField.insertAdjacentHTML('afterend', songSelector);
+                this.initializeSongSelector(form);
+            }
+        }
+
         return form;
+    }
+
+    async initializeSongSelector(form) {
+        const searchInput = form.querySelector('.song-search-input');
+        const songList = form.querySelector('.song-list');
+        const selectedSongs = form.querySelector('.selected-songs');
+        const selectedSongsInput = form.querySelector('#selected-songs-input');
+        const selectedIds = new Set();
+
+        const updateSelectedSongs = () => {
+            selectedSongsInput.value = JSON.stringify([...selectedIds]);
+        };
+
+        searchInput.addEventListener('input', async (e) => {
+            const search = e.target.value;
+            if (search.length < 2) {
+                songList.innerHTML = '';
+                return;
+            }
+
+            const { data: songs } = await this.supabase
+                .from('songs')
+                .select(`
+                    id,
+                    title,
+                    artists (name),
+                    albums (title)
+                `)
+                .ilike('title', `%${search}%`)
+                .eq('status', 'published')
+                .limit(10);
+
+            songList.innerHTML = songs?.map(song => `
+                <div class="song-item" data-id="${song.id}">
+                    <span>${song.title}</span>
+                    <span class="song-info">
+                        ${song.artists.name} - ${song.albums?.title || 'Single'}
+                    </span>
+                </div>
+            `).join('') || '';
+        });
+
+        songList.addEventListener('click', (e) => {
+            const songItem = e.target.closest('.song-item');
+            if (!songItem) return;
+
+            const songId = songItem.dataset.id;
+            const songTitle = songItem.querySelector('span').textContent;
+            const songInfo = songItem.querySelector('.song-info').textContent;
+
+            if (!selectedIds.has(songId)) {
+                selectedIds.add(songId);
+                selectedSongs.insertAdjacentHTML('beforeend', `
+                    <div class="selected-song" data-id="${songId}">
+                        <span>${songTitle} - ${songInfo}</span>
+                        <button type="button" class="remove-song">×</button>
+                    </div>
+                `);
+                updateSelectedSongs();
+            }
+
+            songList.innerHTML = '';
+            searchInput.value = '';
+        });
+
+        selectedSongs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-song')) {
+                const songItem = e.target.closest('.selected-song');
+                const songId = songItem.dataset.id;
+                selectedIds.delete(songId);
+                songItem.remove();
+                updateSelectedSongs();
+            }
+        });
     }
 
     async showCreateForm(type) {
@@ -570,7 +682,62 @@ class AdminUI {
             }
 
             if (type === 'playlist') {
-                processed.creator_id = (await this.supabase.auth.getSession()).data.session?.user?.id;
+                // Get the system account ID
+                const { data: systemProfile } = await this.supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', 'xmdiscover')
+                    .single();
+
+                if (!systemProfile) throw new Error('System account not found');
+
+                // Handle cover image
+                const coverFile = formData.get('cover');
+                let coverUrl = formData.get('cover_url');
+
+                if (coverFile?.size > 0) {
+                    coverUrl = await uploadImage(coverFile, 'playlists');
+                }
+
+                processed = {
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    cover_url: coverUrl,
+                    creator_id: systemProfile.id,
+                    featured: formData.get('featured') === 'on',
+                    status: formData.get('status'),
+                    is_public: true
+                };
+
+                // Handle songs
+                const songIds = JSON.parse(formData.get('songs') || '[]');
+                if (songIds.length === 0) {
+                    throw new Error('Please select at least one song');
+                }
+
+                // Create playlist first
+                const { data: playlist, error } = await this.supabase
+                    .from('playlists')
+                    .insert([processed])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // Then add songs
+                const playlistSongs = songIds.map((songId, index) => ({
+                    playlist_id: playlist.id,
+                    song_id: songId,
+                    position: index
+                }));
+
+                const { error: songError } = await this.supabase
+                    .from('playlist_songs')
+                    .insert(playlistSongs);
+
+                if (songError) throw songError;
+
+                return playlist;
             }
 
             console.log('Processed form data:', processed);

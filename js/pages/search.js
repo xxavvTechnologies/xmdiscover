@@ -61,12 +61,13 @@ class SearchPage {
 
     async performSearch(query) {
         try {
-            const [artists, songs, albums, playlists, users] = await Promise.all([
+            const [artists, songs, albums, playlists, users, podcasts] = await Promise.all([
                 this.searchArtists(query),
                 this.searchSongs(query),
                 this.searchAlbums(query),
                 this.searchPlaylists(query),
-                this.searchUsers(query)
+                this.searchUsers(query),
+                this.searchPodcasts(query)
             ]);
 
             // Clear previous results
@@ -74,7 +75,7 @@ class SearchPage {
 
             // Determine top result
             const topResult = this.determineTopResult({
-                artists, songs, albums, playlists, users
+                artists, songs, albums, playlists, users, podcasts
             }, query);
 
             if (topResult && (this.activeFilter === 'all' || this.activeFilter === topResult.type)) {
@@ -96,6 +97,9 @@ class SearchPage {
             }
             if (this.activeFilter === 'all' || this.activeFilter === 'users') {
                 this.displayUsers(users);
+            }
+            if (this.activeFilter === 'all' || this.activeFilter === 'podcasts') {
+                this.displayPodcasts(podcasts);
             }
 
         } catch (error) {
@@ -163,13 +167,24 @@ class SearchPage {
         return data || [];
     }
 
+    async searchPodcasts(query) {
+        const { data } = await supabase
+            .from('podcasts')
+            .select('*')
+            .eq('status', 'published')
+            .ilike('title', `%${query}%`)
+            .limit(5);
+        return data || [];
+    }
+
     determineTopResult(results, query) {
         const allResults = [
             ...results.artists.map(item => ({ ...item, type: 'artists' })),
             ...results.songs.map(item => ({ ...item, type: 'songs' })),
             ...results.albums.map(item => ({ ...item, type: 'albums' })),
             ...results.playlists.map(item => ({ ...item, type: 'playlists' })),
-            ...results.users.map(item => ({ ...item, type: 'users' }))
+            ...results.users.map(item => ({ ...item, type: 'users' })),
+            ...results.podcasts.map(item => ({ ...item, type: 'podcasts' }))
         ];
 
         if (allResults.length === 0) return null;
@@ -323,6 +338,23 @@ class SearchPage {
                 <div class="user-avatar" style="background-image: url('${user.avatar_url || 'https://d2zcpib8duehag.cloudfront.net/xmdiscover-default-user.png'}')"></div>
                 <h3>${user.display_name || user.username}</h3>
                 <p>@${user.username}</p>
+            </div>
+        `).join('');
+        
+        section.style.display = 'block';
+    }
+
+    displayPodcasts(podcasts) {
+        if (podcasts.length === 0) return;
+        
+        const section = document.querySelector('.podcasts-section');
+        const container = section.querySelector('.podcast-grid');
+        
+        container.innerHTML = podcasts.map(podcast => `
+            <div class="podcast-card" onclick="window.location.href='${getPagePath('/pages/podcast')}?id=${podcast.id}'">
+                <div class="podcast-img" style="background-image: url('${podcast.image_url}')"></div>
+                <h3>${podcast.title}</h3>
+                <p>${podcast.description || ''}</p>
             </div>
         `).join('');
         

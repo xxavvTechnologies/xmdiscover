@@ -329,3 +329,6 @@ drop policy if exists "Users can view likes" on public.likes;
 create policy "Users can only view their own likes"
 on public.likes for select
 using (user_id = auth.uid());
+
+-- Add unique constraint for podcast feed_url
+create unique index if not exists podcasts_feed_url_key on public.podcasts (feed_url);

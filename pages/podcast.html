@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+</head>
+<body>
+    <main>
+        <div class="podcast-header">
+            <div class="podcast-cover">
+                <div class="podcast-image"></div>
+            </div>
+            <div class="podcast-info">
+                <span class="content-type">Podcast</span>
+                <h1 class="podcast-title">Loading...</h1>
+                <p class="podcast-description"></p>
+            </div>
+        </div>
+
+        <section class="podcast-episodes">
+            <h2>Episodes</h2>
+            <div class="episode-list"></div>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/podcast.js"></script>
+</body>
+</html>

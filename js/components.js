@@ -191,22 +191,19 @@ function initializePlayer() {
 
         async playTrack(trackInfo, autoplay = true) {
             try {
-                if (this.loading) return; // Prevent multiple simultaneous loads
+                if (this.loading) return;
                 this.loading = true;
 
                 if (!trackInfo.audioUrl) {
                     throw new Error('No audio URL provided');
                 }
 
-                const audioPath = trackInfo.audioUrl.split('/').slice(-2).join('/');
-                
-                // Get fresh signed URL before updating anything
-                const { data, error } = await supabase
-                    .storage
-                    .from('audio')
-                    .createSignedUrl(audioPath, 3600);
+                // Handle podcasts differently - they don't need signed URLs
+                const audioUrl = trackInfo.type === 'podcast' 
+                    ? trackInfo.audioUrl
+                    : await this.getSignedUrl(trackInfo.audioUrl);
 
-                if (error || !data?.signedUrl) {
+                if (!audioUrl) {
                     throw new Error('Could not access audio file');
                 }
 
@@ -221,11 +218,10 @@ function initializePlayer() {
                 // Update UI before loading audio
                 this.updatePlayerUI(trackInfo);
 
-                // Load audio source
-                this.audioElement.src = data.signedUrl;
+                // Load audio
+                this.audioElement.src = audioUrl;
                 await this.audioElement.load();
 
-                // Only play if autoplay is true and not interrupted
                 if (autoplay) {
                     try {
                         await this.audioElement.play();
@@ -234,37 +230,60 @@ function initializePlayer() {
                         playIcon?.classList.add('fa-pause');
                     } catch (playError) {
                         console.warn('Playback interrupted:', playError);
-                        // Don't throw here - the audio is still loaded
                     }
                 }
 
-                // Load lyrics after successful audio load
-                this.loadLyrics(trackInfo);
+                // For non-podcasts, load lyrics
+                if (trackInfo.type !== 'podcast') {
+                    this.loadLyrics(trackInfo);
+                }
 
-                // After loading audio
                 this.audioElement.addEventListener('loadedmetadata', () => {
                     this.timeTotalDisplay.textContent = this.formatTime(this.audioElement.duration);
                 });
 
             } catch (error) {
                 console.error('Playback failed:', error);
-                alert('Sorry, this track is not available for playback');
+                alert('Sorry, this content is not available for playback');
                 this.clearPlayer();
             } finally {
                 this.loading = false;
             }
         },
 
+        async getSignedUrl(audioPath) {
+            // Extract storage path from full URL
+            const path = audioPath.split('/').slice(-2).join('/');
+            
+            const { data, error } = await supabase
+                .storage
+                .from('audio')
+                .createSignedUrl(path, 3600);
+
+            if (error) throw error;
+            return data?.signedUrl;
+        },
+
         updatePlayerUI(trackInfo) {
             const coverEl = document.querySelector('.current-cover');
-            const titleEl = document.querySelector('.current-info h4');
-            const artistEl = document.querySelector('.current-info p');
+            const titleEl = document.querySelector('.current-title');
+            const artistEl = document.querySelector('.current-artist');
+            const typeEl = document.querySelector('.content-type');
             
             coverEl.style.backgroundImage = `url('${trackInfo.coverUrl || ''}')`;
             titleEl.textContent = trackInfo.title;
-            artistEl.innerHTML = `
-                <a href="${getPagePath('/pages/artist')}?id=${trackInfo.artistId}">${trackInfo.artist}</a>
-            `;
+
+            if (trackInfo.type === 'podcast') {
+                artistEl.textContent = trackInfo.artist;
+                typeEl.textContent = 'Podcast Episode';
+                document.querySelector('.lyrics')?.classList.add('hidden');
+            } else {
+                artistEl.innerHTML = `
+                    <a href="${getPagePath('/pages/artist')}?id=${trackInfo.artistId}">${trackInfo.artist}</a>
+                `;
+                typeEl.textContent = '';
+                document.querySelector('.lyrics')?.classList.remove('hidden');
+            }
 
             const playIcon = document.querySelector('.play-pause i');
             playIcon?.classList.remove('fa-play');

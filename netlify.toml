@@ -13,3 +13,23 @@
   from = "/sitemap.xml"
   to = "/.netlify/functions/generate-sitemap"
   status = 200
+
+[build]
+  functions = "netlify/functions"
+
+[functions]
+  included_files = ["js/services/rss.js"]
+
+[functions.update-podcasts]
+  schedule = "@daily"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Add function redirect for RSS proxy
+[[redirects]]
+  from = "/rss-proxy"
+  to = "/.netlify/functions/rss-proxy"
+  status = 200

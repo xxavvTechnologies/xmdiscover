@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - xM DiScover</title>
+    <title>Manage Podcasts - xM DiScover Admin</title>
     <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/admin.css">
@@ -15,12 +15,12 @@
         <div class="admin-nav-container">
             <div class="admin-nav-left">
                 <div class="admin-logo">xM DiScover</div>
-                <a href="index.html" class="active">Dashboard</a>
+                <a href="index.html">Dashboard</a>
                 <a href="playlists.html">Playlists</a>
                 <a href="albums.html">Albums</a>
                 <a href="songs.html">Songs</a>
-                <a href="podcasts.html">Podcasts</a>
                 <a href="artists.html">Artists</a>
+                <a href="podcasts.html" class="active">Podcasts</a>
                 <a href="exclusive.html">Exclusive</a>
             </div>
             <div class="admin-nav-right">
@@ -31,32 +31,29 @@
         </div>
     </div>
 
-    <main class="admin-main"></main>
+    <main class="admin-main">
         <header class="admin-header">
-            <h1>Admin Dashboard</h1>
+            <h1>Manage Podcasts</h1>
+            <button class="admin-btn" data-action="create" data-type="podcast">
+                Add Podcast
+            </button>
         </header>
-        <div class="admin-grid">
-            <div class="admin-card">
-                <h3>Total Playlists</h3>
-                <p class="admin-stat" data-stat="playlists">-</p>
-                <a href="playlists.html" class="admin-link">Manage Playlists</a>
-            </div>
-            <div class="admin-card">
-                <h3>Total Albums</h3>
-                <p class="admin-stat" data-stat="albums">-</p>
-                <a href="albums.html" class="admin-link">Manage Albums</a>
-            </div>
-            <div class="admin-card">
-                <h3>Total Songs</h3>
-                <p class="admin-stat" data-stat="songs">-</p>
-                <a href="songs.html" class="admin-link">Manage Songs</a>
-            </div>
-            <div class="admin-card">
-                <h3>Total Artists</h3>
-                <p class="admin-stat" data-stat="artists">-</p>
-                <a href="artists.html" class="admin-link">Manage Artists</a>
-            </div>
-        </div>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Episodes</th>
+                    <th>Last Updated</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody data-type="podcast">
+                <!-- Rows will be inserted here with data-type -->
+            </tbody>
+        </table>
     </main>
 </body>
 </html>

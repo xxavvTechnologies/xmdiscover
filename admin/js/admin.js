@@ -88,8 +88,10 @@ class AdminUI {
 
     async handleAction(e) {
         const action = e.target.dataset.action;
-        const type = e.target.dataset.type;
+        const type = e.target.dataset.type || e.target.closest('tr, .admin-card')?.dataset.type;
         const id = e.target.dataset.id;
+
+        if (!action) return;
 
         try {
             switch(action) {
@@ -101,9 +103,17 @@ class AdminUI {
                     break;
                 case 'delete':
                     if (confirm('Are you sure you want to delete this item?')) {
-                        await this.deleteItem(type, id);
+                        if (!type || !id) {
+                            throw new Error('Missing type or ID for deletion');
+                        }
+                        const cleanType = type.replace(/s$/, ''); // Remove trailing 's' if present
+                        await this.deleteItem(cleanType, id);
                         e.target.closest('tr, .admin-card')?.remove();
                     }
+                    break;
+                case 'refresh':
+                    await this.refreshPodcast(id);
+                    await this.loadPodcasts();
                     break;
             }
         } catch (error) {
@@ -131,6 +141,9 @@ class AdminUI {
                     break;
                 case 'playlists.html':
                     await this.loadPlaylists();
+                    break;
+                case 'podcasts.html':
+                    await this.loadPodcasts();
                     break;
             }
         } catch (error) {
@@ -276,6 +289,31 @@ class AdminUI {
         `).join('');
     }
 
+    async loadPodcasts() {
+        const { data: podcasts, error } = await this.supabase
+            .from('podcasts')
+            .select('*, podcast_episodes(count)');
+        if (error) throw error;
+
+        const tbody = document.querySelector('.admin-table tbody');
+        if (!tbody) return;data-type="podcast">
+
+        tbody.innerHTML = podcasts.map(podcast => `
+            <tr>
+                <td><div class="admin-podcast-cover" style="background-image: url('${podcast.image_url || ''}')"></div></td>
+                <td>${podcast.title || 'Loading...'}</td>
+                <td>${podcast.podcast_episodes?.[0]?.count || 0}</td>
+                <td>${podcast.last_fetched ? new Date(podcast.last_fetched).toLocaleString() : 'Never'}</td>
+                <td>${podcast.status}</td>
+                <td class="admin-actions">
+                    <button class="admin-btn" data-action="refresh" data-id="${podcast.id}">Refresh</button>
+                    <button class="admin-btn" data-action="edit" data-id="${podcast.id}">Edit</button>
+                    <button class="admin-btn" data-action="delete" data-id="${podcast.id}">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
     async loadArtistOptions() {
         const { data: artists } = await supabase
             .from('artists')
@@ -382,6 +420,13 @@ class AdminUI {
                     ],
                     default: 'published'
                 }
+            ],
+            podcast: [
+                { name: 'feed_url', label: 'RSS Feed URL', type: 'text', required: true },
+                { name: 'status', label: 'Status', type: 'select', required: true, options: [
+                    { value: 'published', label: 'Published' },
+                    { value: 'draft', label: 'Draft' }
+                ]}
             ]
         };
         return fields[type] || [];
@@ -649,6 +694,71 @@ class AdminUI {
     }
 
     async processFormData(formData, type) {
+        if (type === 'podcast') {
+            try {
+                const feed_url = formData.get('feed_url')?.trim();
+                if (!feed_url) {
+                    throw new Error('Feed URL is required');
+                }
+
+                // Check if podcast already exists
+                const { data: existingPodcast } = await this.supabase
+                    .from('podcasts')
+                    .select('id, status')
+                    .eq('feed_url', feed_url)
+                    .single();
+
+                if (existingPodcast) {
+                    if (existingPodcast.status === 'published') {
+                        throw new Error('This podcast feed is already in the system');
+                    }
+                    
+                    // If podcast exists but not published, update it
+                    const { data: podcast, error: updateError } = await this.supabase
+                        .from('podcasts')
+                        .update({
+                            status: formData.get('status') || 'published',
+                            title: 'Loading...',
+                            description: 'Fetching podcast information...'
+                        })
+                        .eq('id', existingPodcast.id)
+                        .select()
+                        .single();
+
+                    if (updateError) throw updateError;
+
+                    // Refresh metadata
+                    const { loadPodcastFeed } = await import('./podcasts.js');
+                    await loadPodcastFeed(feed_url, podcast.id);
+                    
+                    return podcast;
+                }
+
+                // Create new podcast if it doesn't exist
+                const { data: podcast, error: createError } = await this.supabase
+                    .from('podcasts')
+                    .insert([{
+                        feed_url,
+                        status: formData.get('status') || 'published',
+                        title: 'Loading...',
+                        description: 'Fetching podcast information...'
+                    }])
+                    .select()
+                    .single();
+
+                if (createError) throw createError;
+
+                // Fetch metadata
+                const { loadPodcastFeed } = await import('./podcasts.js');
+                await loadPodcastFeed(feed_url, podcast.id);
+                
+                return podcast;
+            } catch (error) {
+                console.error('Podcast creation error:', error);
+                throw error;
+            }
+        }
+
         if (type === 'album') {
             try {
                 // Handle cover image upload
@@ -901,6 +1011,20 @@ class AdminUI {
             console.error('Form processing error:', error);
             throw error;
         }
+    }
+
+    async refreshPodcast(id) {
+        const { data: podcast } = await this.supabase
+            .from('podcasts')
+            .select('feed_url')
+            .eq('id', id)
+            .single();
+
+        if (!podcast?.feed_url) throw new Error('No feed URL found');
+
+        const { loadPodcastFeed } = await import('./podcasts.js');
+        await loadPodcastFeed(podcast.feed_url, id);
+        await this.loadPodcasts();
     }
 
     formatDuration(interval) {

@@ -16,7 +16,8 @@ class LibraryUI {
         await Promise.all([
             this.loadUserPlaylists(session.user.id),
             this.loadLikedSongs(session.user.id),
-            this.loadRecentlyPlayed(session.user.id)
+            this.loadRecentlyPlayed(session.user.id),
+            this.loadFollowedPodcasts(session.user.id) // Add this
         ]);
     }
 
@@ -88,12 +89,15 @@ class LibraryUI {
         const { data: history } = await supabase
             .from('play_history')
             .select(`
-                songs!inner (
+                *,
+                songs (
                     id,
                     title,
                     duration,
                     cover_url,
-                    artists!inner (name)
+                    artists (
+                        name
+                    )
                 )
             `)
             .eq('user_id', userId)
@@ -111,6 +115,32 @@ class LibraryUI {
             if (history?.length > 0) {
                 container.querySelector('.song-count').textContent = `${history.length} recently played`;
             }
+        }
+    }
+
+    async loadFollowedPodcasts(userId) {
+        const { data: follows } = await supabase
+            .from('podcast_follows')
+            .select(`
+                podcast:podcast_id (
+                    id,
+                    title,
+                    description,
+                    image_url,
+                    podcast_episodes(count)
+                )
+            `)
+            .eq('user_id', userId);
+
+        const container = document.querySelector('[data-content="podcasts"]');
+        if (container) {
+            container.innerHTML = follows?.map(({ podcast }) => `
+                <div class="podcast-card" onclick="window.location.href='${getPagePath('/pages/podcast')}?id=${podcast.id}'">
+                    <div class="podcast-img" style="background-image: url('${podcast.image_url}')"></div>
+                    <h3>${podcast.title}</h3>
+                    <p>${podcast.podcast_episodes[0]?.count || 0} episodes</p>
+                </div>
+            `).join('') || '<p>No followed podcasts</p>';
         }
     }
 }

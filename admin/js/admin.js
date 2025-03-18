@@ -296,11 +296,11 @@ class AdminUI {
         if (error) throw error;
 
         const tbody = document.querySelector('.admin-table tbody');
-        if (!tbody) return;data-type="podcast">
-
+        if (!tbody) return;
+        
         tbody.innerHTML = podcasts.map(podcast => `
             <tr>
-                <td><div class="admin-podcast-cover" style="background-image: url('${podcast.image_url || ''}')"></div></td>
+                <td><div class="admin-podcast-cover" style="background-image: url('${podcast.image_url || ''}');"></div></td>
                 <td>${podcast.title || 'Loading...'}</td>
                 <td>${podcast.podcast_episodes?.[0]?.count || 0}</td>
                 <td>${podcast.last_fetched ? new Date(podcast.last_fetched).toLocaleString() : 'Never'}</td>

@@ -10,16 +10,21 @@ export async function loadPodcastFeed(feed_url, podcastId) {
             throw new Error('Podcast feed missing title');
         }
         
-        // Update podcast info
+        // Update podcast info using upsert
         const { error: podcastError } = await supabase
             .from('podcasts')
-            .update({
+            .upsert({
+                id: podcastId,
                 title: podcastData.title,
                 description: podcastData.description || '',
                 image_url: podcastData.image || '',
-                last_fetched: new Date().toISOString()
-            })
-            .eq('id', podcastId);
+                feed_url: feed_url,
+                last_fetched: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+            });
 
         if (podcastError) throw podcastError;
 

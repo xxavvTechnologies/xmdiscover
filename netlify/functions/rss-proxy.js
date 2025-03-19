@@ -16,7 +16,12 @@ exports.handler = async (event) => {
     }
 
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/rss+xml, application/xml, text/xml',
+                'User-Agent': 'Mozilla/5.0 (compatible; xMDiscover/1.0;)'
+            }
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -24,11 +29,19 @@ exports.handler = async (event) => {
         
         const feedContent = await response.text();
 
+        // Validate that the response is XML
+        if (!feedContent.trim().startsWith('<?xml')) {
+            throw new Error('Invalid RSS feed: Response is not XML');
+        }
+
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/xml',
-                'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'GET',
+                'Cache-Control': 'public, max-age=3600'
             },
             body: feedContent
         };
@@ -36,7 +49,14 @@ exports.handler = async (event) => {
         console.error('RSS proxy error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to fetch RSS feed' })
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                error: error.message,
+                url: url 
+            })
         };
     }
 };

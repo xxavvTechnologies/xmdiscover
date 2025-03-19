@@ -1,5 +1,6 @@
 import { supabase, getPagePath } from '../supabase.js';
 import { uploadImage } from '../storage.js';
+import { notifications } from '../services/notifications.js';
 
 class ProfilePage {
     constructor() {
@@ -216,11 +217,12 @@ class ProfilePage {
                     .eq('id', this.profileId);
 
                 if (error) throw error;
+                notifications.show('Profile updated successfully', 'success');
                 window.location.reload();
 
             } catch (error) {
                 console.error('Failed to update profile:', error);
-                alert('Failed to update profile');
+                notifications.show('Failed to update profile: ' + error.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Save Changes';
             }

@@ -2,105 +2,77 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 exports.handler = async (event) => {
-    if (event.httpMethod !== 'GET') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+  try {
+    const { search, url } = event.queryStringParameters;
+    const headers = {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${process.env.GENIUS_ACCESS_TOKEN}`
+    };
+
+    // Handle search request
+    if (search) {
+      const searchUrl = `https://api.genius.com/search?q=${encodeURIComponent(search)}`;
+      const { data } = await axios.get(searchUrl, { headers });
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify(data)
+      };
     }
 
-    const { url, search } = event.queryStringParameters;
+    // Handle lyrics scraping request
+    if (url) {
+      const { data: html } = await axios.get(url);
+      const $ = cheerio.load(html);
+      
+      // Try multiple selectors to find lyrics
+      const selectors = [
+        '[data-lyrics-container="true"]',
+        '.lyrics',
+        '.Lyrics__Container-sc-1ynbvzw-6',
+        '.song_body-lyrics'
+      ];
 
-    try {
-        if (search) {
-            // Handle Genius API search
-            const response = await axios.get(`https://api.genius.com/search?q=${search}`, {
-                headers: {
-                    'Authorization': `Bearer ${process.env.GENIUS_ACCESS_TOKEN}`
-                }
-            });
-            return {
-                statusCode: 200,
-                body: JSON.stringify(response.data)
-            };
-        } else if (url) {
-            // Update lyrics scraping logic
-            const response = await axios.get(url);
-            const $ = cheerio.load(response.data);
-            
-            // Try multiple possible selectors and methods
-            const lyricsSelectors = [
-                '[class*="Lyrics__Container"]',
-                '[class*="lyrics"]',
-                '.lyrics',
-                '.song_body-lyrics',
-                'div[class^="Lyrics"]',
-                'div[class*="Lyrics"]'
-            ];
-            
-            let lyrics = '';
-            
-            // Method 1: Direct selector
-            for (const selector of lyricsSelectors) {
-                const element = $(selector);
-                if (element.length) {
-                    lyrics = element.text().trim();
-                    break;
-                }
-            }
-            
-            // Method 2: Search by data attributes if Method 1 failed
-            if (!lyrics) {
-                $('[data-lyrics-container="true"]').each((i, el) => {
-                    lyrics += $(el).text().trim() + '\n';
-                });
-            }
-
-            // Method 3: Find lyrics in structured data if both methods failed
-            if (!lyrics) {
-                const scriptTags = $('script[type="application/ld+json"]');
-                scriptTags.each((i, el) => {
-                    try {
-                        const data = JSON.parse($(el).html());
-                        if (data.lyrics) {
-                            lyrics = data.lyrics;
-                        }
-                    } catch (e) {
-                        console.error('JSON parse failed:', e);
-                    }
-                });
-            }
-
-            if (!lyrics) {
-                throw new Error('Could not locate lyrics content');
-            }
-
-            // Clean up the lyrics
-            lyrics = lyrics
-                .replace(/\[.+?\]/g, '') // Remove [] annotations
-                .replace(/\n{3,}/g, '\n\n') // Normalize line breaks
-                .replace(/\s{2,}/g, ' ') // Normalize spaces
-                .trim();
-
-            // Add caching headers
-            const headers = {
-                'Content-Type': 'application/json',
-                'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-                'Vary': 'Accept-Encoding'
-            };
-
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({ lyrics })
-            };
+      let lyrics = '';
+      for (const selector of selectors) {
+        const element = $(selector);
+        if (element.length) {
+          lyrics = element.text().trim();
+          break;
         }
+      }
 
-        return {
-            statusCode: 400,
-            body: 'Missing url or search parameter'
-        };
-    } catch (error) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: error.message })
-        };
+      if (!lyrics) {
+        throw new Error('Could not find lyrics in page');
+      }
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'public, max-age=86400' // Cache for 24 hours
+        },
+        body: JSON.stringify({ lyrics })
+      };
     }
+
+    return {
+      statusCode: 400,
+      body: 'Missing search or url parameter'
+    };
+
+  } catch (error) {
+    console.error('Genius proxy error:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ error: error.message })
+    };
+  }
 };

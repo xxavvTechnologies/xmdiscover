@@ -1,5 +1,6 @@
 import { supabase, getPagePath } from './supabase.js';
 import { searchSong, getLyrics } from './services/genius.js';
+import { notifications } from './services/notifications.js';
 
 // Helper function to normalize paths
 function normalizePath(path) {
@@ -7,125 +8,73 @@ function normalizePath(path) {
     return path.replace(/^\//, '').replace(/\.html$/, '');
 }
 
+async function handleAuth() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        // Get auth elements
+        const loggedOutElements = document.querySelectorAll('[data-auth="logged-out"]');
+        const loggedInElements = document.querySelectorAll('[data-auth="logged-in"]');
+        
+        if (session) {
+            // Show logged in elements, hide logged out elements
+            loggedOutElements.forEach(el => el.style.display = 'none');
+            loggedInElements.forEach(el => el.style.display = 'flex');
+
+            // Get user profile
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (profile) {
+                // Update profile elements
+                const avatarImg = document.querySelector('.profile-avatar');
+                const nameSpan = document.querySelector('.profile-name');
+                
+                if (avatarImg) {
+                    avatarImg.src = profile.avatar_url || 'https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/default%20user.png';
+                    avatarImg.onerror = () => {
+                        avatarImg.src = 'https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/default%20user.png';
+                    };
+                }
+                if (nameSpan) {
+                    nameSpan.textContent = profile.display_name || profile.username;
+                }
+            }
+        } else {
+            // Show logged out elements, hide logged in elements
+            loggedOutElements.forEach(el => el.style.display = 'flex');
+            loggedInElements.forEach(el => el.style.display = 'none');
+        }
+    } catch (error) {
+        console.error('Auth handling error:', error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Load components
-        await Promise.all([
-            loadComponent('header'),
-            loadComponent('player'),
-            loadComponent('footer')
-        ]);
+        // Load components sequentially to ensure correct order
+        await loadComponent('header');
+        await loadComponent('player');
+        await loadComponent('footer');
 
-        // Initialize player functionality
-        initializePlayer();
-
-        // Helper function to add delay between operations
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        await delay(100); // Add small delay between operations
-
-        // Set active nav link with delay
-        await delay(100);
-        const currentPath = normalizePath(window.location.pathname);
-        const currentPage = currentPath || 'index';
-        
-        // Update nav link selection logic
-        document.querySelectorAll('nav a').forEach(link => {
-            const linkPath = normalizePath(link.getAttribute('href'));
-            if (linkPath === currentPage) {
-                link.classList.add('active');
-            }
-        });
-
-        // Set page title and subtitle
-        const pageTitles = {
-            'index': ['Welcome to xM DiScover', 'Your personal journey through millions of tracks'],
-            'discover': ['Discover New Music', 'Explore new artists and genres'],
-            'library': ['Your Library', 'Access your favorite music']
-        };
-
-        const [pageTitle, pageSubtitle] = pageTitles[currentPage] || ['', ''];
-        document.title = pageTitle ? `${pageTitle} - xM DiScover` : 'xM DiScover';
-
-        const titleElement = document.getElementById('page-title');
-        const subtitleElement = document.getElementById('page-subtitle');
-        
-        if (titleElement && subtitleElement) {
-            titleElement.textContent = pageTitle;
-            subtitleElement.textContent = pageSubtitle;
-        }
-
-        // Add auth state handling
-        const handleAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            // Get auth elements
-            const loggedOutElements = document.querySelectorAll('[data-auth="logged-out"]');
-            const loggedInElements = document.querySelectorAll('[data-auth="logged-in"]');
-            
-            if (session) {
-                // Show logged in elements, hide logged out elements
-                loggedOutElements.forEach(el => el.style.display = 'none');
-                loggedInElements.forEach(el => el.style.display = 'flex');
-
-                // Get user profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (profile) {
-                    // Update profile elements
-                    const avatarImg = document.querySelector('.profile-avatar');
-                    const nameSpan = document.querySelector('.profile-name');
-                    
-                    if (avatarImg) {
-                        avatarImg.src = profile.avatar_url || 'https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/default%20user.png';
-                        avatarImg.onerror = () => {
-                            avatarImg.src = 'https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/default%20user.png';
-                        };
-                        avatarImg.alt = profile.display_name || 'Profile';
-                    }
-                    if (nameSpan) {
-                        nameSpan.textContent = profile.display_name || profile.username;
-                    }
-
-                    // Add admin link if admin
-                    if (profile.role === 'admin') {
-                        const dropdown = document.querySelector('.profile-dropdown');
-                        if (dropdown) {
-                            dropdown.insertAdjacentHTML('afterbegin', '<a href="../admin/index.html">Admin Dashboard</a>');
-                        }
-                    }
-                }
-
-                // Setup logout handler
-                document.querySelector('.logout-btn')?.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await supabase.auth.signOut();
-                    window.location.reload();
-                });
-
-            } else {
-                // Show logged out elements, hide logged in elements
-                loggedOutElements.forEach(el => el.style.display = 'flex');
-                loggedInElements.forEach(el => el.style.display = 'none');
-            }
-        };
-
-        // Initial auth check
+        // Initialize auth handling
         await handleAuth();
 
-        // Listen for auth changes
-        supabase.auth.onAuthStateChange(() => handleAuth());
+        // Initialize player after components are loaded
+        const player = initializePlayer();
+        if (!player) {
+            console.error('Player initialization failed');
+            return;
+        }
 
-        // Add profile menu toggle
+        // Set up profile menu handlers
         document.querySelector('.profile-trigger')?.addEventListener('click', (e) => {
             e.currentTarget.parentElement.classList.toggle('active');
         });
 
-        // Close profile menu when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.profile-menu')) {
                 document.querySelector('.profile-menu')?.classList.remove('active');
@@ -138,25 +87,95 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadComponent(name) {
-    const response = await fetch(`../components/${name}.html`);
-    const html = await response.text();
-    const position = name === 'footer' ? 'beforeend' : 'afterbegin';
-    document.body.insertAdjacentHTML(position, html);
+    try {
+        const response = await fetch(`/components/${name}.html`);
+        if (!response.ok) throw new Error(`Failed to load ${name} component`);
+        const html = await response.text();
+        const position = name === 'footer' ? 'beforeend' : 'afterbegin';
+        document.body.insertAdjacentHTML(position, html);
+        return true;
+    } catch (error) {
+        console.error(`Failed to load ${name} component:`, error);
+        return false;
+    }
+}
+
+async function checkLikeStatus(songId) {
+    if (!songId) return false;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+
+    const { data: likes } = await supabase
+        .from('likes')
+        .select('id')
+        .eq('song_id', songId)
+        .eq('user_id', session.user.id)
+        .single();
+    
+    return !!likes;
+}
+
+async function toggleLike(songId) {
+    if (!songId) return false;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = getPagePath('/auth/login');
+        return false;
+    }
+
+    const isLiked = await checkLikeStatus(songId);
+    
+    try {
+        if (isLiked) {
+            await supabase
+                .from('likes')
+                .delete()
+                .eq('song_id', songId)
+                .eq('user_id', session.user.id);
+            notifications.show('Removed from your liked songs', 'info');
+        } else {
+            await supabase
+                .from('likes')
+                .insert([{ song_id: songId, user_id: session.user.id }]);
+            notifications.show('Added to your liked songs', 'success');
+        }
+        return !isLiked;
+    } catch (error) {
+        notifications.show('Failed to update like status', 'error');
+        return isLiked;
+    }
 }
 
 function initializePlayer() {
-    const player = {
-        audioElement: new Audio(),
-        currentTrack: null,
-        loading: false,
+    // Wait for elements to be available
+    const elements = {
         progressBar: document.querySelector('.progress-bar'),
         progressCurrent: document.querySelector('.progress-current'),
         timeDisplay: document.querySelector('.time-current'),
         timeTotalDisplay: document.querySelector('.time-total'),
-        isDraggingProgress: false,
         volumeBar: document.querySelector('.volume-bar'),
         volumeCurrent: document.querySelector('.volume-current'),
-        volumeButton: document.querySelector('.volume'),
+        volumeButton: document.querySelector('.volume')
+    };
+
+    // Validate required elements
+    const missingElements = Object.entries(elements)
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
+
+    if (missingElements.length > 0) {
+        console.error('Missing required player elements:', missingElements);
+        return null;
+    }
+
+    const player = {
+        audioElement: new Audio(),
+        currentTrack: null,
+        loading: false,
+        ...elements,
+        isDraggingProgress: false,
         isDraggingVolume: false,
         lastVolume: 1,
 
@@ -194,128 +213,72 @@ function initializePlayer() {
                 if (this.loading) return;
                 this.loading = true;
 
-                if (!trackInfo.audioUrl) {
+                // Validate input
+                if (!trackInfo?.audioUrl) {
                     throw new Error('No audio URL provided');
                 }
 
-                // Handle podcasts differently - they don't need signed URLs
+                // Get signed URL first before touching audio element
                 const audioUrl = trackInfo.type === 'podcast' 
-                    ? trackInfo.audioUrl
+                    ? trackInfo.audioUrl 
                     : await this.getSignedUrl(trackInfo.audioUrl);
 
                 if (!audioUrl) {
                     throw new Error('Could not access audio file');
                 }
 
-                // Store track info and update state
-                this.currentTrack = trackInfo;
-                localStorage.setItem('playerState', JSON.stringify({
-                    track: trackInfo,
-                    currentTime: 0,
-                    isPlaying: autoplay
-                }));
-
-                // Update UI before loading audio
+                // Update UI first
                 this.updatePlayerUI(trackInfo);
+                this.currentTrack = trackInfo;
 
-                // Load audio
+                // Reset audio element and set new source
+                this.audioElement.pause();
+                this.audioElement.src = ''; // Clear source
+                this.audioElement.load(); // Reset state
+                
                 this.audioElement.src = audioUrl;
-                await this.audioElement.load();
+                await new Promise((resolve, reject) => {
+                    this.audioElement.onerror = (e) => {
+                        const error = e.target.error;
+                        if (error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+                            reject(new Error('Audio format not supported'));
+                        } else if (error?.code === MediaError.MEDIA_ERR_NETWORK) {
+                            reject(new Error('Network error while loading audio'));
+                        } else {
+                            reject(new Error('Failed to load audio'));
+                        }
+                    };
+                    this.audioElement.onloadedmetadata = () => resolve();
+                    this.audioElement.load();
+                });
 
                 if (autoplay) {
                     try {
                         await this.audioElement.play();
-                        const playIcon = document.querySelector('.play-pause i');
-                        playIcon?.classList.remove('fa-play');
-                        playIcon?.classList.add('fa-pause');
                     } catch (playError) {
-                        console.warn('Playback interrupted:', playError);
+                        console.warn('Autoplay prevented:', playError);
+                        // Don't throw here - just log warning
                     }
                 }
 
-                // For non-podcasts, load lyrics
+                // Load lyrics for music tracks
                 if (trackInfo.type !== 'podcast') {
-                    this.loadLyrics(trackInfo);
+                    this.loadLyrics(trackInfo).catch(console.error);
                 }
-
-                this.audioElement.addEventListener('loadedmetadata', () => {
-                    this.timeTotalDisplay.textContent = this.formatTime(this.audioElement.duration);
-                });
 
             } catch (error) {
                 console.error('Playback failed:', error);
-                alert('Sorry, this content is not available for playback');
-                this.clearPlayer();
+                this.handlePlaybackError(error);
             } finally {
                 this.loading = false;
             }
         },
 
-        async getSignedUrl(audioPath) {
-            // Extract storage path from full URL
-            const path = audioPath.split('/').slice(-2).join('/');
-            
-            const { data, error } = await supabase
-                .storage
-                .from('audio')
-                .createSignedUrl(path, 3600);
-
-            if (error) throw error;
-            return data?.signedUrl;
-        },
-
-        updatePlayerUI(trackInfo) {
-            const coverEl = document.querySelector('.current-cover');
-            const titleEl = document.querySelector('.current-title');
-            const artistEl = document.querySelector('.current-artist');
-            const typeEl = document.querySelector('.content-type');
-            
-            coverEl.style.backgroundImage = `url('${trackInfo.coverUrl || ''}')`;
-            titleEl.textContent = trackInfo.title;
-
-            if (trackInfo.type === 'podcast') {
-                artistEl.textContent = trackInfo.artist;
-                typeEl.textContent = 'Podcast Episode';
-                document.querySelector('.lyrics')?.classList.add('hidden');
-            } else {
-                artistEl.innerHTML = `
-                    <a href="${getPagePath('/pages/artist')}?id=${trackInfo.artistId}">${trackInfo.artist}</a>
-                `;
-                typeEl.textContent = '';
-                document.querySelector('.lyrics')?.classList.remove('hidden');
-            }
-
-            const playIcon = document.querySelector('.play-pause i');
-            playIcon?.classList.remove('fa-play');
-            playIcon?.classList.add('fa-pause');
-        },
-
-        clearPlayer() {
-            localStorage.removeItem('currentTrack');
-            this.audioElement.src = '';
-            this.currentTrack = null;
-            
-            const coverEl = document.querySelector('.current-cover');
-            const titleEl = document.querySelector('.current-info h4');
-            const artistEl = document.querySelector('.current-info p');
-            
-            coverEl.style.backgroundImage = '';
-            titleEl.textContent = 'Select a track';
-            artistEl.textContent = '-';
-
-            const playIcon = document.querySelector('.play-pause i');
-            playIcon?.classList.remove('fa-pause');
-            playIcon?.classList.add('fa-play');
-        },
-
         async togglePlayPause() {
-            if (!this.currentTrack || !this.audioElement.src) {
-                return;
-            }
+            if (!this.currentTrack || !this.audioElement.src) return;
 
-            const playIcon = document.querySelector('.play-pause i');
-            
             try {
+                const playIcon = document.querySelector('.play-pause i');
                 if (this.audioElement.paused) {
                     await this.audioElement.play();
                     playIcon?.classList.replace('fa-play', 'fa-pause');
@@ -323,72 +286,142 @@ function initializePlayer() {
                     this.audioElement.pause();
                     playIcon?.classList.replace('fa-pause', 'fa-play');
                 }
-
-                // Update stored state
-                if (this.currentTrack) {
-                    localStorage.setItem('playerState', JSON.stringify({
-                        track: this.currentTrack,
-                        currentTime: this.audioElement.currentTime,
-                        isPlaying: !this.audioElement.paused
-                    }));
-                }
+                this.savePlayerState();
             } catch (error) {
                 console.error('Playback toggle failed:', error);
             }
         },
 
-        // Save playback position before unloading
-        setupUnloadHandler() {
-            window.addEventListener('beforeunload', () => {
-                if (this.currentTrack) {
-                    localStorage.setItem('currentTrack', JSON.stringify({
-                        ...this.currentTrack,
-                        currentTime: this.audioElement.currentTime
-                    }));
+        updatePlayerUI(trackInfo) {
+            const coverEl = document.querySelector('.current-cover');
+            const titleEl = document.querySelector('.current-title');
+            const artistEl = document.querySelector('.current-artist');
+            const typeEl = document.querySelector('.content-type');
+
+            if (coverEl) coverEl.style.backgroundImage = `url('${trackInfo.coverUrl || ''}')`;
+            if (titleEl) {
+                titleEl.innerHTML = `<span>${trackInfo.title || 'Unknown'}</span>`;
+                
+                // Check if text overflows
+                const span = titleEl.querySelector('span');
+                if (span && span.offsetWidth > titleEl.offsetWidth) {
+                    titleEl.classList.add('scrolling');
+                } else {
+                    titleEl.classList.remove('scrolling');
                 }
-            });
-        },
+            }
 
-        // Restore previous playback state
-        async restorePlaybackState() {
-            const savedTrack = localStorage.getItem('currentTrack');
-            if (savedTrack) {
-                const trackInfo = JSON.parse(savedTrack);
-                await this.playTrack(trackInfo);
-                this.audioElement.currentTime = trackInfo.currentTime;
+            if (trackInfo.type === 'podcast') {
+                if (artistEl) artistEl.textContent = trackInfo.artist;
+                if (typeEl) typeEl.textContent = 'Podcast Episode';
+                document.querySelector('.lyrics')?.classList.add('hidden');
+            } else {
+                if (artistEl) {
+                    artistEl.innerHTML = `
+                        <a href="${getPagePath('/pages/artist')}?id=${trackInfo.artistId}">${trackInfo.artist}</a>
+                    `;
+                }
+                if (typeEl) typeEl.textContent = '';
+                document.querySelector('.lyrics')?.classList.remove('hidden');
+            }
+
+            const playIcon = document.querySelector('.play-pause i');
+            playIcon?.classList.remove('fa-play');
+            playIcon?.classList.add('fa-pause');
+
+            // Update like button if it's a song
+            const likeBtn = document.querySelector('.like-btn');
+            if (likeBtn) {
+                if (trackInfo.type === 'podcast') {
+                    likeBtn.style.display = 'none';
+                } else {
+                    likeBtn.style.display = '';
+                    likeBtn.dataset.songId = trackInfo.id || '';
+                    
+                    // Check like status
+                    checkLikeStatus(trackInfo.id).then(isLiked => {
+                        const icon = likeBtn.querySelector('i');
+                        icon.className = isLiked ? 'ri-heart-3-fill' : 'ri-heart-3-line';
+                        likeBtn.classList.toggle('active', isLiked);
+                    });
+                }
             }
         },
 
-        savePlayerState() {
-            if (this.currentTrack) {
-                localStorage.setItem('playerState', JSON.stringify({
-                    track: this.currentTrack,
-                    currentTime: this.audioElement.currentTime,
-                    isPlaying: !this.audioElement.paused
-                }));
-            }
+        handlePlaybackError(error) {
+            this.clearPlayer();
+            const message = error.message === 'Could not access audio file'
+                ? 'This track is currently unavailable.'
+                : 'Unable to play this track. Please try again later.';
+            notifications.show(message, 'error');
         },
 
-        async restorePlayerState() {
-            const savedState = localStorage.getItem('playerState');
-            if (savedState) {
-                const state = JSON.parse(savedState);
-                await this.playTrack(state.track, false); // Keep autoplay false
-                this.audioElement.currentTime = state.currentTime;
+        clearPlayer() {
+            this.audioElement.src = '';
+            this.audioElement.load();
+            this.currentTrack = null;
+            localStorage.removeItem('playerState');
+
+            const coverEl = document.querySelector('.current-cover');
+            const titleEl = document.querySelector('.current-title');
+            const artistEl = document.querySelector('.current-artist');
+            const playIcon = document.querySelector('.play-pause i');
+
+            if (coverEl) coverEl.style.backgroundImage = '';
+            if (titleEl) titleEl.textContent = 'Select a track';
+            if (artistEl) artistEl.textContent = '-';
+            if (playIcon) {
+                playIcon.classList.remove('fa-pause');
+                playIcon.classList.add('fa-play');
+            }
+
+            this.progressCurrent.style.width = '0%';
+            this.timeDisplay.textContent = '0:00';
+        },
+
+        async getSignedUrl(audioUrl) {
+            if (!audioUrl) throw new Error('No audio URL provided');
+
+            // Handle absolute URLs (podcasts)
+            if (audioUrl.startsWith('http') && !audioUrl.includes('supabase.co')) {
+                return audioUrl;
+            }
+
+            try {
+                // Extract the file path from the URL or use the path directly
+                let storagePath;
                 
-                // Don't automatically play, just update UI
-                const playIcon = document.querySelector('.play-pause i');
-                playIcon?.classList.remove('fa-pause');
-                playIcon?.classList.add('fa-play');
-                
-                // Add click handler to start playback
-                const playBtn = document.querySelector('.play-pause');
-                const clickHandler = async () => {
-                    await this.audioElement.play();
-                    playIcon?.classList.replace('fa-play', 'fa-pause');
-                    playBtn.removeEventListener('click', clickHandler);
-                };
-                playBtn.addEventListener('click', clickHandler);
+                if (audioUrl.includes('storage/v1/object')) {
+                    // Handle full Supabase URLs
+                    storagePath = audioUrl.split('storage/v1/object/sign/audio/')[1];
+                    if (!storagePath) {
+                        storagePath = audioUrl.split('storage/v1/object/public/audio/')[1];
+                    }
+                    // Remove any query parameters
+                    storagePath = storagePath?.split('?')[0];
+                } else {
+                    // Handle direct paths
+                    storagePath = audioUrl;
+                }
+
+                if (!storagePath) {
+                    throw new Error('Invalid audio path');
+                }
+
+                // Create a new signed URL with 1-hour expiry
+                const { data, error } = await supabase
+                    .storage
+                    .from('audio')
+                    .createSignedUrl(decodeURIComponent(storagePath), 3600);
+
+                if (error) throw error;
+                if (!data?.signedUrl) throw new Error('Failed to get signed URL');
+
+                return data.signedUrl;
+
+            } catch (err) {
+                console.error('Failed to get signed URL:', err);
+                throw new Error('Could not access audio file');
             }
         },
 
@@ -407,68 +440,67 @@ function initializePlayer() {
         },
 
         setupProgressBar() {
-            // Set up progress bar interactions
-            this.progressBar.addEventListener('mousedown', (e) => {
+            // Bind the event handlers to keep 'this' context
+            const handleMouseDown = (e) => {
                 this.isDraggingProgress = true;
                 this.updateProgressFromEvent(e);
-            });
+            };
 
-            document.addEventListener('mousemove', (e) => {
+            const handleMouseMove = (e) => {
                 if (this.isDraggingProgress) {
                     this.updateProgressFromEvent(e);
                 }
-            });
+            };
 
-            document.addEventListener('mouseup', () => {
-                if (this.isDraggingProgress) {
-                    this.isDraggingProgress = false;
-                }
-            });
+            const handleMouseUp = () => {
+                this.isDraggingProgress = false;
+            };
 
-            // Handle direct clicks
-            this.progressBar.addEventListener('click', (e) => {
-                this.updateProgressFromEvent(e);
-            });
+            // Add event listeners with bound functions
+            this.progressBar.addEventListener('mousedown', handleMouseDown.bind(this));
+            document.addEventListener('mousemove', handleMouseMove.bind(this));
+            document.addEventListener('mouseup', handleMouseUp.bind(this));
+            this.progressBar.addEventListener('click', this.updateProgressFromEvent.bind(this));
         },
 
         updateProgressFromEvent(e) {
+            if (!this.audioElement.duration) return;
+            
             const rect = this.progressBar.getBoundingClientRect();
             const percent = Math.min(Math.max(0, (e.clientX - rect.left) / rect.width), 1);
-            
-            if (this.audioElement.duration) {
-                this.audioElement.currentTime = this.audioElement.duration * percent;
-                this.progressCurrent.style.width = `${percent * 100}%`;
-            }
+            this.audioElement.currentTime = this.audioElement.duration * percent;
+            this.progressCurrent.style.width = `${percent * 100}%`;
         },
 
         setupVolumeControl() {
-            this.volumeBar.addEventListener('mousedown', (e) => {
+            // Bind volume control handlers
+            const handleMouseDown = (e) => {
                 this.isDraggingVolume = true;
                 this.updateVolumeFromEvent(e);
-            });
+            };
 
-            document.addEventListener('mousemove', (e) => {
+            const handleMouseMove = (e) => {
                 if (this.isDraggingVolume) {
                     this.updateVolumeFromEvent(e);
                 }
-            });
+            };
 
-            document.addEventListener('mouseup', () => {
+            const handleMouseUp = () => {
                 this.isDraggingVolume = false;
-            });
+            };
 
-            this.volumeBar.addEventListener('click', (e) => {
-                this.updateVolumeFromEvent(e);
-            });
+            this.volumeBar.addEventListener('mousedown', handleMouseDown.bind(this));
+            document.addEventListener('mousemove', handleMouseMove.bind(this));
+            document.addEventListener('mouseup', handleMouseUp.bind(this));
+            this.volumeBar.addEventListener('click', this.updateVolumeFromEvent.bind(this));
 
+            // Bind volume button handler
             this.volumeButton.addEventListener('click', () => {
                 if (this.audioElement.volume > 0) {
                     this.lastVolume = this.audioElement.volume;
                     this.updateVolume(0);
-                    this.volumeButton.querySelector('i').className = 'ri-volume-mute-line';
                 } else {
                     this.updateVolume(this.lastVolume);
-                    this.updateVolumeIcon(this.lastVolume);
                 }
             });
         },
@@ -494,84 +526,188 @@ function initializePlayer() {
             } else {
                 icon.className = 'ri-volume-up-line';
             }
+        },
+
+        savePlayerState() {
+            if (this.currentTrack) {
+                sessionStorage.setItem('playerState', JSON.stringify({
+                    track: this.currentTrack,
+                    currentTime: this.audioElement.currentTime,
+                    isPlaying: !this.audioElement.paused
+                }));
+            }
+        },
+
+        async restorePlayerState() {
+            const savedState = sessionStorage.getItem('playerState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                await this.playTrack(state.track, true); // Changed to true for autoplay
+                this.audioElement.currentTime = state.currentTime;
+            }
+            // Only disable autoplay on fresh page loads
+            if (document.visibilityState === 'hidden' || performance.navigation.type === 1) {
+                const playIcon = document.querySelector('.play-pause i');
+                playIcon?.classList.remove('fa-pause');
+                playIcon?.classList.add('fa-play');
+                this.audioElement.pause();
+            }
+        },
+
+        setupSidebar() {
+            const sidebar = document.querySelector('.player-sidebar');
+            const panels = document.querySelectorAll('.panel');
+            let activePanel = null;
+            const title = document.querySelector('.sidebar-title');
+
+            // Handle panel button clicks
+            document.querySelectorAll('[data-panel]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const panelName = btn.dataset.panel;
+                    const panel = document.querySelector(`.${panelName}-panel`);
+                    
+                    // Toggle panel visibility
+                    if (activePanel === panel) {
+                        sidebar.classList.remove('active');
+                        panel.classList.remove('active');
+                        activePanel = null;
+                    } else {
+                        panels.forEach(p => p.classList.remove('active'));
+                        panel.classList.add('active');
+                        sidebar.classList.add('active');
+                        activePanel = panel;
+                        title.textContent = panelName.charAt(0).toUpperCase() + panelName.slice(1);
+                    }
+                });
+            });
+
+            // Close sidebar when clicking close button
+            document.querySelector('.close-sidebar')?.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                panels.forEach(panel => panel.classList.remove('active'));
+                activePanel = null;
+            });
+
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && !e.target.closest('[data-panel]')) {
+                    sidebar.classList.remove('active');
+                    panels.forEach(panel => panel.classList.remove('active'));
+                    activePanel = null;
+                }
+            });
+        },
+
+        setupEventListeners() {
+            // Handle audio errors
+            this.audioElement.addEventListener('error', (e) => {
+                if (!this.loading) { // Ignore errors during loading
+                    const error = e.target.error;
+                    console.error('Audio playback error:', error);
+                    
+                    if (!this.audioElement.src) {
+                        return; // Ignore empty src errors
+                    }
+                    
+                    if (error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+                        this.handlePlaybackError(new Error('Audio format not supported'));
+                    } else if (error?.code === MediaError.MEDIA_ERR_NETWORK) {
+                        this.handlePlaybackError(new Error('Network error while loading audio'));
+                    } else {
+                        this.handlePlaybackError(new Error('Failed to load audio'));
+                    }
+                }
+            });
+
+            // Save state before unload
+            window.addEventListener('beforeunload', () => {
+                if (this.currentTrack) {
+                    localStorage.setItem('currentTrack', JSON.stringify({
+                        ...this.currentTrack,
+                        currentTime: this.audioElement.currentTime
+                    }));
+                }
+            });
+
+            // Setup sidebar panels
+            document.querySelectorAll('[data-panel]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const panelName = btn.dataset.panel;
+                    const panel = document.querySelector(`.${panelName}-panel`);
+                    const sidebar = document.querySelector('.player-sidebar');
+                    const title = document.querySelector('.sidebar-title');
+                    const panels = document.querySelectorAll('.panel');
+                    
+                    panels.forEach(p => p.classList.remove('active'));
+                    
+                    if (panel.classList.contains('active')) {
+                        sidebar.classList.remove('active');
+                        panel.classList.remove('active');
+                    } else {
+                        sidebar.classList.add('active');
+                        panel.classList.add('active');
+                        title.textContent = panelName.charAt(0).toUpperCase() + panelName.slice(1);
+                    }
+                });
+            });
         }
     };
 
-    // Setup event listeners
-    player.setupUnloadHandler();
-    
-    // Restore previous playback state
-    player.restorePlayerState();
+    // Initialize player
+    if (player) {
+        player.setupProgressBar();
+        player.setupVolumeControl();
+        player.setupEventListeners();
+        player.setupSidebar();
 
-    // Save state before unloading
-    window.addEventListener('beforeunload', () => {
-        player.savePlayerState();
-    });
-
-    // Update currentTime periodically
-    player.audioElement.addEventListener('timeupdate', () => {
-        player.savePlayerState();
-        player.updateProgress();
-    });
-
-    // Listen for play track events
-    document.addEventListener('xm-play-track', (e) => {
-        player.playTrack(e.detail);
-    });
-
-    // Play/Pause button
-    document.querySelector('.play-pause')?.addEventListener('click', () => {
-        player.togglePlayPause();
-    });
-
-    // Toggle sidebar
-    document.querySelectorAll('[data-panel]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const panelName = e.currentTarget.dataset.panel;
-            const sidebar = document.querySelector('.player-sidebar');
-            const panels = document.querySelectorAll('.panel');
-            
-            panels.forEach(panel => {
-                panel.classList.toggle('active', 
-                    panel.classList.contains(`${panelName}-panel`)
-                );
-            });
-            
-            sidebar.classList.add('active');
+        // Bind the play/pause button click
+        document.querySelector('.play-pause')?.addEventListener('click', () => {
+            player.togglePlayPause();
         });
-    });
 
-    // Close sidebar
-    document.querySelector('.close-sidebar')?.addEventListener('click', () => {
-        document.querySelector('.player-sidebar').classList.remove('active');
-    });
+        // Setup other player event listeners
+        player.audioElement.addEventListener('timeupdate', () => {
+            player.savePlayerState();
+            player.updateProgress();
+        });
 
-    // Handle play/pause
-    document.querySelector('.play-pause')?.addEventListener('click', (e) => {
-        const icon = e.currentTarget.querySelector('i');
-        icon.classList.toggle('fa-play');
-        icon.classList.toggle('fa-pause');
-    });
+        // Listen for play track events
+        document.addEventListener('xm-play-track', (e) => {
+            if (e.detail?.audioUrl) {
+                player.playTrack(e.detail);
+            } else {
+                console.error('Invalid track data:', e.detail);
+                alert('Invalid track data');
+            }
+        });
 
-    // Update currentTime in localStorage periodically
-    player.audioElement.addEventListener('timeupdate', () => {
-        if (player.currentTrack) {
-            localStorage.setItem('currentTrack', JSON.stringify({
-                ...player.currentTrack,
-                currentTime: player.audioElement.currentTime
-            }));
+        // Error handling
+        player.audioElement.addEventListener('error', (e) => {
+            if (e.target.error) {
+                console.error('Audio error:', e.target.error);
+                player.handlePlaybackError(new Error('Failed to load audio'));
+            }
+        });
+
+        // Setup like button handler
+        const likeBtn = document.querySelector('.like-btn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const songId = likeBtn.dataset.songId;
+                if (!songId) return;
+
+                const isNowLiked = await toggleLike(songId);
+                const icon = likeBtn.querySelector('i');
+                icon.className = isNowLiked ? 'ri-heart-3-fill' : 'ri-heart-3-line';
+                likeBtn.classList.toggle('active', isNowLiked);
+            });
         }
-    });
 
-    // Add error handling for audio element
-    player.audioElement.addEventListener('error', (e) => {
-        console.error('Audio error:', e.target.error);
-        player.clearPlayer();
-    });
-
-    // Set up progress tracking
-    player.setupProgressBar();
-
-    // Set up volume control
-    player.setupVolumeControl();
+        // Try to restore previous state
+        player.restorePlayerState();
+    }
+    return player;
 }

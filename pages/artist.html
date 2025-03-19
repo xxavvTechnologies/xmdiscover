@@ -39,5 +39,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="../js/components.js"></script>
     <script type="module" src="../js/pages/artist.js"></script>
+    <script type="module">
+        import { notifications } from '../js/services/notifications.js';
+        notifications.init();
+    </script>
 </body>
 </html>

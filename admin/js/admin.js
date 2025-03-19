@@ -1,6 +1,7 @@
 import { supabase } from '../../js/supabase.js';
 import { getDashboardStats } from './stats.js';
 import { uploadAudio, uploadImage } from '../../js/storage.js';
+import { notifications } from '../../js/services/notifications.js';
 
 class AdminUI {
     constructor() {
@@ -109,6 +110,7 @@ class AdminUI {
                         const cleanType = type.replace(/s$/, ''); // Remove trailing 's' if present
                         await this.deleteItem(cleanType, id);
                         e.target.closest('tr, .admin-card')?.remove();
+                        notifications.show('Item deleted successfully', 'success');
                     }
                     break;
                 case 'refresh':
@@ -118,7 +120,7 @@ class AdminUI {
             }
         } catch (error) {
             console.error('Action failed:', error);
-            alert('Operation failed: ' + error.message);
+            notifications.show(error.message, 'error');
         }
     }
 
@@ -701,48 +703,20 @@ class AdminUI {
                     throw new Error('Feed URL is required');
                 }
 
-                // Check if podcast already exists
-                const { data: existingPodcast } = await this.supabase
-                    .from('podcasts')
-                    .select('id, status')
-                    .eq('feed_url', feed_url)
-                    .single();
-
-                if (existingPodcast) {
-                    if (existingPodcast.status === 'published') {
-                        throw new Error('This podcast feed is already in the system');
-                    }
-                    
-                    // If podcast exists but not published, update it
-                    const { data: podcast, error: updateError } = await this.supabase
-                        .from('podcasts')
-                        .update({
-                            status: formData.get('status') || 'published',
-                            title: 'Loading...',
-                            description: 'Fetching podcast information...'
-                        })
-                        .eq('id', existingPodcast.id)
-                        .select()
-                        .single();
-
-                    if (updateError) throw updateError;
-
-                    // Refresh metadata
-                    const { loadPodcastFeed } = await import('./podcasts.js');
-                    await loadPodcastFeed(feed_url, podcast.id);
-                    
-                    return podcast;
-                }
-
-                // Create new podcast if it doesn't exist
+                // Create new podcast with upsert
                 const { data: podcast, error: createError } = await this.supabase
                     .from('podcasts')
-                    .insert([{
+                    .upsert({
                         feed_url,
                         status: formData.get('status') || 'published',
                         title: 'Loading...',
-                        description: 'Fetching podcast information...'
-                    }])
+                        description: 'Fetching podcast information...',
+                        last_fetched: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'feed_url',
+                        ignoreDuplicates: false
+                    })
                     .select()
                     .single();
 

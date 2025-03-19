@@ -122,8 +122,8 @@ nav ul li a.login-btn:hover {
 }
 
 main {
-    padding-top: 64px; /* Match nav height */
-    min-height: calc(100vh - 64px); /* Account for nav height */
+    padding: 84px 2rem 120px;  /* 84px top (nav + 20px), 2rem sides, 120px bottom (player + 20px) */
+    min-height: calc(100vh - 64px);
     width: min(100%, 1800px);
     margin: 0 auto;
     position: relative;
@@ -401,9 +401,7 @@ footer {
 
 @media (max-width: 768px) {
     main {
-        padding-top: 6rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding: 74px 1rem 100px;
     }
 
     .playlist-grid {
@@ -427,24 +425,26 @@ footer {
     left: 0;
     right: 0;
     z-index: 1000;
-    display: flex;
-}
-
-.player {
     background: rgba(20, 0, 40, 0.98);
     backdrop-filter: blur(20px);
     border-top: 1px solid rgba(140, 82, 255, 0.1);
+}
+
+.player {
     width: 100%;
-    padding: 1rem;
+    max-width: 1800px;
+    margin: 0 auto;
+    height: 90px;
+    padding: 0.75rem 2rem;
+    position: relative;
 }
 
 .player-main {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
+    grid-template-columns: 250px 1fr 250px;
+    gap: 1rem;
     align-items: center;
-    gap: 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
+    height: 100%;
 }
 
 .player-current {
@@ -454,16 +454,38 @@ footer {
 }
 
 .current-cover {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     border-radius: 8px;
-    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.current-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .current-info h4 {
     color: white;
     margin: 0;
     font-size: 0.9rem;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Add animation container */
+.current-info h4 span {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 50px; /* Space between repeat */
+}
+
+/* Apply animation when text overflows */
+.current-info h4.scrolling span {
+    animation: marquee 12s linear infinite;
 }
 
 .current-info p {
@@ -489,10 +511,6 @@ footer {
     transition: all 0.3s;
 }
 
-.control-btn:hover {
-    background: rgba(140, 82, 255, 0.1);
-}
-
 .play-pause {
     width: 40px;
     height: 40px;
@@ -501,13 +519,14 @@ footer {
 
 .player-progress {
     position: absolute;
-    top: -0.5rem;
+    top: -0.25rem;
     left: 0;
     right: 0;
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0 1rem;
+    padding: 0 2rem;
+    transform: translateY(-50%);
 }
 
 .progress-bar {
@@ -523,48 +542,6 @@ footer {
     background: linear-gradient(45deg, #8c52ff, #ff6b6b);
     border-radius: 2px;
     width: 0%;
-}
-
-/* Updated Player Styles */
-.player-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-}
-
-.player {
-    background: rgba(20, 0, 40, 0.98);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(140, 82, 255, 0.1);
-    padding: 0.5rem 1rem 1rem;
-}
-
-.player-progress {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    position: relative;
-}
-
-.progress-bar {
-    flex: 1;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    cursor: pointer;
-    position: relative;
-}
-
-.progress-current {
-    height: 100%;
-    background: linear-gradient(90deg, #8c52ff, #ff6b6b);
-    border-radius: 2px;
-    width: 0%;
-    position: relative;
-    transition: width 0.1s linear;
 }
 
 .progress-handle {
@@ -592,37 +569,23 @@ footer {
     min-width: 45px;
 }
 
-.player-main {
-    display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    align-items: center;
-    gap: 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
-    padding-top: 0.5rem;
-}
-
-.current-cover {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    object-fit: cover;
-    background: linear-gradient(45deg, #8c52ff20, #ff6b6b20);
-}
-
 .player-sidebar {
     position: fixed;
-    top: 0;
+    top: 64px; /* Match height of nav */
     right: -400px;
     width: 400px;
-    height: 100vh;
+    height: calc(100vh - 64px); /* Full viewport height minus nav height */
     background: rgba(20, 0, 40, 0.98);
     backdrop-filter: blur(20px);
     border-left: 1px solid rgba(140, 82, 255, 0.1);
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1001;
+    z-index: 99; /* Below nav (100) but above content */
     display: flex;
     flex-direction: column;
+}
+
+.player-sidebar.active {
+    right: 0;
 }
 
 .sidebar-header {
@@ -645,21 +608,67 @@ footer {
     color: #b3b3b3;
     cursor: pointer;
     padding: 0.5rem;
-    border-radius: 50%;
     transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 1.2rem;
 }
 
 .close-sidebar:hover {
-    color: #fff;
-    background: rgba(255,255,255,0.1);
+    color: white;
 }
 
 .sidebar-panels {
     flex: 1;
     overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom); /* For iOS devices */
+}
+
+.panel {
+    display: none;
+    padding: 1.5rem;
+    height: 100%;
+}
+
+.panel.active {
+    display: block;
+}
+
+/* Queue Panel Styles */
+.queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Lyrics Panel Styles */
+.lyrics-panel {
+    padding: 2rem;
+}
+
+.lyrics-text {
+    white-space: pre-line;
+    color: #fff;
+    line-height: 1.8;
+}
+
+.lyrics-text p {
+    margin: 0.5rem 0;
+}
+
+.lyrics-source {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(140, 82, 255, 0.1);
+    font-size: 0.8rem;
+    color: #b3b3b3;
+}
+
+.lyrics-source a {
+    color: #8c52ff;
+    text-decoration: none;
+}
+
+.lyrics-source a:hover {
+    text-decoration: underline;
 }
 
 .time-current, .time-total {
@@ -690,15 +699,17 @@ footer {
 /* Sidebar Styles */
 .player-sidebar {
     position: fixed;
-    top: 0;
+    top: 64px; /* Match height of nav */
     right: -400px;
     width: 400px;
-    height: 100vh;
+    height: calc(100vh - 64px); /* Full viewport height minus nav height */
     background: rgba(20, 0, 40, 0.98);
     backdrop-filter: blur(20px);
     border-left: 1px solid rgba(140, 82, 255, 0.1);
     transition: right 0.3s ease;
-    z-index: 1001;
+    z-index: 99; /* Below nav (100) but above content */
+    display: flex;
+    flex-direction: column;
 }
 
 .player-sidebar.active {
@@ -724,6 +735,7 @@ footer {
 .sidebar-panels {
     height: calc(100vh - 60px);
     overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom); /* For iOS devices */
 }
 
 .panel {
@@ -856,19 +868,34 @@ footer {
 
 /* Mobile Responsive Updates */
 @media (max-width: 768px) {
+    main {
+        padding: 74px 1rem 100px;
+    }
+
+    .player {
+        height: 70px;
+        padding: 0.5rem 1rem;
+    }
+
     .player-main {
-        grid-template-columns: 1fr auto;
-        gap: 1rem;
-        padding: 0;
+        grid-template-columns: auto 1fr;
     }
 
-    .player-controls {
-        grid-column: 1 / -1;
-        order: -1;
+    .player-actions {
+        display: none;
     }
 
-    .player-current {
-        font-size: 0.9rem;
+    .player-progress {
+        padding: 0 1rem;
+    }
+
+    .player {
+        padding: 0.5rem 1rem;
+        height: 80px;
+    }
+
+    .player-main {
+        grid-template-columns: auto 1fr auto;
     }
 
     .current-cover {
@@ -876,11 +903,17 @@ footer {
         height: 40px;
     }
 
+    .current-info {
+        display: none;
+    }
+
     .player-actions {
         display: none;
     }
 
     .player-sidebar {
+        top: 0;
+        height: 100vh; /* Full height on mobile */
         width: 100%;
         right: -100%;
     }
@@ -1067,4 +1100,164 @@ footer {
     color: #b3b3b3;
     text-align: center;
     padding: 2rem;
+}
+
+/* Album Cover Styles */
+.album-cover {
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.album-cover:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.2) 0%, transparent 50%);
+    border-radius: 12px;
+}
+
+/* Like Button Styles */
+.like-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: all 0.3s;
+    opacity: 0.7;
+}
+
+.like-btn:hover, 
+.like-btn.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.like-btn i {
+    font-size: 1.2rem;
+}
+
+/* Add marquee animation */
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(0); } /* Pause at start */
+    80% { transform: translateX(calc(-100% + 200px)); } /* Stop before completely scrolling out */
+    100% { transform: translateX(0); }
+}
+
+/* Update current info styles */
+.current-info h4 {
+    color: white;
+    margin: 0;
+    font-size: 0.9rem;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Add animation container */
+.current-info h4 span {
+    display: inline-block;
+    white-space: nowrap;
+    padding-right: 50px; /* Space between repeat */
+}
+
+/* Apply animation when text overflows */
+.current-info h4.scrolling span {
+    animation: marquee 12s linear infinite;
+}
+
+/* Notification Styles */
+.notifications-container {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.notification {
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    color: white;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    backdrop-filter: blur(10px);
+    transform: translateX(-120%);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification p {
+    flex: 1;
+    margin: 0;
+    padding-top: 1px;
+}
+
+.notification-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.notification-close:hover {
+    color: white;
+}
+
+.notification-success {
+    border-color: rgba(46, 213, 115, 0.3);
+}
+
+.notification-success .notification-icon {
+    color: #2ed573;
+}
+
+.notification-error {
+    border-color: rgba(255, 71, 87, 0.3);
+}
+
+.notification-error .notification-icon {
+    color: #ff4757;
+}
+
+.notification-warning {
+    border-color: rgba(255, 165, 2, 0.3);
+}
+
+.notification-warning .notification-icon {
+    color: #ffa502;
+}
+
+.notification-info {
+    border-color: rgba(140, 82, 255, 0.3);
+}
+
+.notification-info .notification-icon {
+    color: #8c52ff;
 }

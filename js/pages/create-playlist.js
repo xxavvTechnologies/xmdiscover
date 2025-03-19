@@ -1,5 +1,6 @@
-import { supabase } from '../supabase.js';
+import { supabase, getPagePath } from '../supabase.js';
 import { uploadImage } from '../storage.js';
+import { notifications } from '../services/notifications.js';
 
 class CreatePlaylistPage {
     constructor() {
@@ -11,6 +12,7 @@ class CreatePlaylistPage {
         // Auth check
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+            notifications.show('Please log in to create a playlist', 'warning');
             window.location.href = '/auth/login.html';
             return;
         }
@@ -46,10 +48,11 @@ class CreatePlaylistPage {
 
                 if (error) throw error;
 
+                notifications.show('Playlist created successfully!', 'success');
                 window.location.href = `/pages/playlist.html?id=${playlist.id}`;
             } catch (error) {
                 console.error('Failed to create playlist:', error);
-                alert('Failed to create playlist: ' + error.message);
+                notifications.show('Failed to create playlist: ' + error.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create Playlist';
             }

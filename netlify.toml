@@ -1,7 +1,14 @@
 [[redirects]]
+  from = "/rss-proxy"
+  to = "/.netlify/functions/rss-proxy"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
 
 [[redirects]]
   from = "/auth/*"
@@ -15,6 +22,7 @@
   status = 200
 
 [build]
+  publish = "."
   functions = "netlify/functions"
 
 [functions]
@@ -26,10 +34,4 @@
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
-  status = 200
-
-# Add function redirect for RSS proxy
-[[redirects]]
-  from = "/rss-proxy"
-  to = "/.netlify/functions/rss-proxy"
   status = 200

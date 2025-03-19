@@ -330,5 +330,90 @@ create policy "Users can only view their own likes"
 on public.likes for select
 using (user_id = auth.uid());
 
--- Add unique constraint for podcast feed_url
-create unique index if not exists podcasts_feed_url_key on public.podcasts (feed_url);
+-- Clean up existing podcast tables and constraints
+drop table if exists public.podcast_follows cascade;
+drop table if exists public.podcast_episodes cascade;
+drop table if exists public.podcasts cascade;
+drop index if exists podcasts_feed_url_key;
+
+-- Create podcasts table with NOT NULL constraints
+create table if not exists public.podcasts (
+    id uuid primary key default uuid_generate_v4(),
+    title text not null default 'Loading...',
+    description text,
+    image_url text,
+    feed_url text not null,
+    featured boolean not null default false,
+    status text not null default 'draft',
+    last_fetched timestamp with time zone,
+    updated_at timestamp with time zone default timezone('utc'::text, now()),
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    unique(feed_url)
+);
+
+-- Create podcast_episodes table
+create table if not exists public.podcast_episodes (
+    id uuid primary key default uuid_generate_v4(),
+    podcast_id uuid references public.podcasts(id) on delete cascade,
+    title text not null,
+    description text,
+    audio_url text not null,
+    duration text,
+    episode_number text,
+    published_at timestamp with time zone,
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    unique(podcast_id, audio_url)
+);
+
+-- Create podcast_follows table for user subscriptions
+create table if not exists public.podcast_follows (
+    id uuid primary key default uuid_generate_v4(),
+    user_id uuid references public.profiles(id) on delete cascade,
+    podcast_id uuid references public.podcasts(id) on delete cascade,
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    unique(user_id, podcast_id)
+);
+
+-- Enable RLS on podcast tables
+alter table public.podcasts enable row level security;
+alter table public.podcast_episodes enable row level security;
+alter table public.podcast_follows enable row level security;
+
+-- Add RLS policies for podcasts
+create policy "Anyone can view published podcasts"
+    on public.podcasts for select
+    using (status = 'published');
+
+create policy "Admins can manage podcasts"
+    on public.podcasts for all
+    using (
+        exists (
+            select 1 from public.profiles
+            where id = auth.uid()
+            and role = 'admin'
+        )
+    );
+
+create policy "Anyone can view published podcast episodes"
+    on public.podcast_episodes for select
+    using (
+        exists (
+            select 1 from public.podcasts
+            where id = podcast_episodes.podcast_id
+            and status = 'published'
+        )
+    );
+
+create policy "Admins can manage podcast episodes"
+    on public.podcast_episodes for all
+    using (
+        exists (
+            select 1 from public.profiles
+            where id = auth.uid()
+            and role = 'admin'
+        )
+    );
+
+create policy "Users can follow podcasts"
+    on public.podcast_follows for all
+    using (user_id = auth.uid());

@@ -5,6 +5,7 @@ Allow: /library
 Allow: /pages/artist
 Allow: /pages/playlist
 Allow: /pages/release
+Allow: /podcasts
 
 Disallow: /auth/
 Disallow: /admin/

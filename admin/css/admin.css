@@ -21,7 +21,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.4rem 2rem;  /* Increased horizontal padding */
+    padding: 0.75rem 2rem;
+    backdrop-filter: blur(20px);
     max-width: 1600px;     /* Adjusted to match new layout */
     margin: 0 auto;
 }
@@ -30,14 +31,15 @@
 .admin-nav-left {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .admin-nav-left a {
     color: #fff;
     text-decoration: none;
-    padding: 0.4rem 0.75rem;
+    padding: 0.75rem 1.25rem;
     font-size: 0.85rem;
+    font-weight: 500;
     border-radius: 4px;
 }
 
@@ -62,8 +64,12 @@
 }
 
 .admin-logo {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 800;
+    letter-spacing: -0.5px;
+    padding: 0.5rem 1rem;
+    background: rgba(140, 82, 255, 0.1);
+    border-radius: 12px;
     background: linear-gradient(45deg, #8c52ff, #ff6b6b);
     -webkit-background-clip: text;
     background-clip: text;
@@ -72,8 +78,8 @@
 
 /* Main Content Area */
 .admin-main {
-    padding: 2rem;
-    max-width: 1400px;  /* Reduced from 1800px */
+    padding: 3rem;
+    max-width: 1600px;
     margin: 2rem auto;   /* Added margin-top/bottom */
     background: rgba(20, 0, 40, 0.2);
     border-radius: 12px;
@@ -133,9 +139,16 @@
 
 .admin-card {
     background: rgba(20, 0, 40, 0.95);
-    padding: 1.5rem;
-    border-radius: 12px;
+    padding: 2rem;
+    border-radius: 16px;
     border: 1px solid rgba(140, 82, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.admin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
 .admin-stat {
@@ -160,11 +173,14 @@
     border-collapse: collapse;
     margin-top: 1rem;
     margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(140, 82, 255, 0.1);
 }
 
 .admin-table th,
 .admin-table td {
-    padding: 1rem;
+    padding: 1.25rem;
     text-align: left;
     border-bottom: 1px solid rgba(140, 82, 255, 0.1);
 }
@@ -172,6 +188,11 @@
 .admin-table th {
     color: #8c52ff;
     font-weight: 600;
+    background: rgba(140, 82, 255, 0.1);
+}
+
+.admin-table td {
+    background: rgba(20, 0, 40, 0.95);
 }
 
 .admin-actions {

@@ -1,6 +1,9 @@
 <nav>
     <a href="/" class="logo">xM DiScover</a>
-    <ul>
+    <button class="mobile-menu-btn" aria-label="Menu">
+        <i class="ri-menu-line"></i>
+    </button>
+    <ul class="desktop-nav">
         <li><a href="../index.html">Home</a></li>
         <li><a href="../pages/search.html">Search</a></li>
         <li><a href="../discover.html">Discover</a></li>
@@ -17,12 +20,39 @@
                 </button>
                 <div class="profile-dropdown">
                     <a href="/pages/profile.html">Profile</a>
-                    <a href="settings.html">Settings</a>
+                    <a href="/pages/settings.html">Settings</a>
                     <a href="#" class="logout-btn">Logout</a>
                 </div>
             </div>
         </li>
     </ul>
+    <div class="mobile-menu">
+        <div class="mobile-menu-header">
+            <div class="mobile-user-info" data-auth="logged-in">
+                <div class="nav-avatar">
+                    <img src="" alt="" class="profile-avatar">
+                </div>
+                <div class="user-details">
+                    <span class="profile-name"></span>
+                    <small class="profile-email"></small>
+                </div>
+            </div>
+            <button class="mobile-menu-close" aria-label="Close menu">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <ul class="mobile-nav">
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/pages/search.html">Search</a></li>
+            <li><a href="/discover.html">Discover</a></li>
+            <li><a href="/podcasts.html">Podcasts</a></li>
+            <li><a href="/library.html" data-auth="logged-in">Library</a></li>
+            <li data-auth="logged-in"><a href="/pages/profile.html">Profile</a></li>
+            <li data-auth="logged-in"><a href="/pages/settings.html">Settings</a></li>
+            <li data-auth="logged-in"><a href="#" class="logout-btn">Logout</a></li>
+            <li data-auth="logged-out"><a href="/auth/login.html" class="login-btn">Login</a></li>
+        </ul>
+    </div>
 </nav>
 
 <header class="hero">

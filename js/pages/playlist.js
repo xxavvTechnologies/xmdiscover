@@ -1,4 +1,5 @@
 import { supabase, getPagePath } from '../supabase.js';
+import { updateMetaTags } from '../seo.js';
 
 class PlaylistPage {
     constructor() {
@@ -132,6 +133,7 @@ class PlaylistPage {
 
             if (!playlist) throw new Error('Playlist not found');
 
+            await updateMetaTags('playlist', playlist);
             this.updateUI(playlist);
             await Promise.all([
                 this.loadTracks(playlist.id),

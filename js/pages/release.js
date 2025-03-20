@@ -1,4 +1,5 @@
-import { supabase } from '../supabase.js';
+import { supabase, getPagePath } from '../supabase.js';
+import { updateMetaTags } from '../seo.js';
 
 class ReleasePage {
     constructor() {
@@ -27,6 +28,7 @@ class ReleasePage {
 
             if (!release) throw new Error('Release not found');
 
+            await updateMetaTags('release', release);
             this.updateUI(release);
             await Promise.all([
                 this.loadTracks(release.id),

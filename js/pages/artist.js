@@ -1,4 +1,5 @@
 import { supabase, getPagePath } from '../supabase.js';
+import { updateMetaTags } from '../seo.js';
 
 class ArtistPage {
     constructor() {
@@ -20,6 +21,7 @@ class ArtistPage {
 
             if (!artist) throw new Error('Artist not found');
 
+            await updateMetaTags('artist', artist);
             this.updateUI(artist);
             await Promise.all([
                 this.loadReleases(),

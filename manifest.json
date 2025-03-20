@@ -1,0 +1,21 @@
+{
+    "name": "xM DiScover",
+    "short_name": "xM DiScover",
+    "description": "Stream music from xxavvMusik artists. Create playlists, discover new music, and more.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0014",
+    "theme_color": "#8c52ff",
+    "icons": [
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png", 
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

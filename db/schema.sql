@@ -7,6 +7,10 @@ begin;
   -- Private audio bucket
   insert into storage.buckets (id, name, public) 
   values ('audio', 'audio', false);
+
+  -- Create ads bucket
+  insert into storage.buckets (id, name)
+  values ('ads', 'ads');
 commit;
 
 -- Policy for public images bucket (allow anyone to view)
@@ -32,6 +36,22 @@ create policy "Only admins can insert audio"
       and role = 'admin'
     )
   );
+
+-- Ads bucket policies
+create policy "Only admins can upload ads"
+on storage.objects for insert
+with check (
+    bucket_id = 'ads'
+    and exists(
+        select 1 from public.profiles
+        where id = auth.uid()
+        and role = 'admin'
+    )
+);
+
+create policy "Ads are publicly accessible" 
+on storage.objects for select
+using (bucket_id = 'ads');
 
   -- Add storage bucket policies
 -- Public images bucket
@@ -183,6 +203,20 @@ create table if not exists public.play_history (
     played_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+-- Create ads table
+create table if not exists public.ads (
+    id uuid primary key default uuid_generate_v4(),
+    title text not null,
+    advertiser text not null,
+    audio_url text not null,
+    click_url text,
+    duration interval not null,
+    status text default 'active',
+    play_count bigint default 0,
+    click_count bigint default 0,
+    created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
 -- Enable RLS
 alter table public.profiles enable row level security;
 alter table public.artists enable row level security;
@@ -192,6 +226,7 @@ alter table public.playlists enable row level security;
 alter table public.playlist_songs enable row level security;
 alter table public.likes enable row level security;
 alter table public.play_history enable row level security;
+alter table public.ads enable row level security;
 
 -- Playlist policies
 create policy "Users can view public playlists"

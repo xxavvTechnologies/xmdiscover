@@ -118,7 +118,7 @@ class SearchPage {
     }
 
     async searchSongs(query) {
-        const { data } = await supabase
+        const { data: songs } = await supabase
             .from('songs')
             .select(`
                 *,
@@ -128,7 +128,34 @@ class SearchPage {
             .eq('status', 'published')
             .ilike('title', `%${query}%`)
             .limit(5);
-        return data || [];
+            
+        // Get signed URLs for all songs
+        if (songs) {
+            const songPromises = songs.map(async (song) => {
+                if (song.audio_url && song.audio_url.includes('supabase.co/storage')) {
+                    const urlParts = song.audio_url.split('/storage/v1/object/');
+                    if (urlParts.length === 2) {
+                        const pathPart = urlParts[1].replace(/^(public|sign)\//, '');
+                        const cleanPath = pathPart.split('?')[0];
+                        
+                        const { data } = await supabase.storage
+                            .from(cleanPath.split('/')[0])
+                            .createSignedUrl(
+                                cleanPath.split('/').slice(1).join('/'),
+                                3600
+                            );
+                        
+                        if (data?.signedUrl) {
+                            song.audio_url = data.signedUrl;
+                        }
+                    }
+                }
+                return song;
+            });
+            
+            return await Promise.all(songPromises);
+        }
+        return [];
     }
 
     async searchAlbums(query) {
@@ -282,7 +309,7 @@ class SearchPage {
                             id: song.id,
                             title: song.title,
                             artist: song.artists.name,
-                            audioUrl: song.audio_url,
+                            audioUrl: song.audio_url, // Now using pre-signed URL
                             coverUrl: song.cover_url,
                             artistId: song.artist_id
                         }
@@ -346,9 +373,20 @@ class SearchPage {
 
     displayPodcasts(podcasts) {
         if (podcasts.length === 0) return;
-        
+
         const section = document.querySelector('.podcasts-section');
-        const container = section.querySelector('.podcast-grid');
+        if (!section) {
+            console.warn('Podcasts section not found');
+            return;
+        }
+
+        // Create container if it doesn't exist
+        let container = section.querySelector('.podcast-grid');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'podcast-grid';
+            section.appendChild(container);
+        }
         
         container.innerHTML = podcasts.map(podcast => `
             <div class="podcast-card" onclick="window.location.href='${getPagePath('/pages/podcast')}?id=${podcast.id}'">

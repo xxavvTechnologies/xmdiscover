@@ -170,8 +170,12 @@ class PlaylistPage {
                     id,
                     title,
                     duration,
+                    audio_url,
                     cover_url,
-                    artists (name)
+                    artists (
+                        id,
+                        name
+                    )
                 )
             `)
             .eq('playlist_id', this.playlistId)
@@ -179,7 +183,31 @@ class PlaylistPage {
 
         const container = document.querySelector('.track-list');
         if (container && tracks) {
-            container.innerHTML = tracks.map(({ songs: track }, index) => `
+            // Get signed URLs for all tracks
+            const processedTracks = await Promise.all(tracks.map(async ({ songs: track }) => {
+                if (track.audio_url?.includes('supabase.co/storage')) {
+                    const urlParts = track.audio_url.split('/storage/v1/object/');
+                    if (urlParts.length === 2) {
+                        const pathPart = urlParts[1].replace(/^(public|sign)\//, '');
+                        const cleanPath = pathPart.split('?')[0];
+                        
+                        const { data } = await supabase.storage
+                            .from(cleanPath.split('/')[0])
+                            .createSignedUrl(
+                                cleanPath.split('/').slice(1).join('/'),
+                                3600
+                            );
+                        
+                        if (data?.signedUrl) {
+                            track.audio_url = data.signedUrl;
+                        }
+                    }
+                }
+                return track;
+            }));
+
+            // Display tracks
+            container.innerHTML = processedTracks.map((track, index) => `
                 <div class="track-item" data-track-id="${track.id}">
                     <span class="track-number">${index + 1}</span>
                     <img src="${track.cover_url}" alt="${track.title}" width="40" height="40">
@@ -190,9 +218,26 @@ class PlaylistPage {
                     <span class="track-duration">${track.duration}</span>
                 </div>
             `).join('');
-            
-            document.querySelector('.playlist-tracks').textContent = 
-                `${tracks.length} track${tracks.length !== 1 ? 's' : ''}`;
+
+            // Add click handlers for tracks
+            container.querySelectorAll('.track-item').forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    const track = processedTracks[index];
+                    if (!track) return;
+                    
+                    const playEvent = new CustomEvent('xm-play-track', {
+                        detail: {
+                            id: track.id,
+                            title: track.title,
+                            artist: track.artists.name,
+                            audioUrl: track.audio_url,
+                            coverUrl: track.cover_url,
+                            artistId: track.artists.id
+                        }
+                    });
+                    document.dispatchEvent(playEvent);
+                });
+            });
         }
     }
 

@@ -55,16 +55,13 @@ class LibraryUI {
         const { data: likes } = await supabase
             .from('likes')
             .select(`
-                song_id,
-                created_at,
-                song:song_id (
+                songs (
                     id,
                     title,
                     duration,
+                    audio_url,
                     cover_url,
-                    artists (
-                        name
-                    )
+                    artists (name)
                 )
             `)
             .eq('user_id', userId)
@@ -89,15 +86,13 @@ class LibraryUI {
         const { data: history } = await supabase
             .from('play_history')
             .select(`
-                *,
                 songs (
                     id,
                     title,
                     duration,
+                    audio_url,
                     cover_url,
-                    artists (
-                        name
-                    )
+                    artists (name)
                 )
             `)
             .eq('user_id', userId)
@@ -105,13 +100,39 @@ class LibraryUI {
 
         const container = document.querySelector('[data-content="recently-played"]');
         if (container) {
+            // Process signed URLs before displaying
+            const processedTracks = await Promise.all(history?.map(async (item) => {
+                const track = item.songs;
+                if (track.audio_url?.includes('supabase.co/storage')) {
+                    const urlParts = track.audio_url.split('/storage/v1/object/');
+                    if (urlParts.length === 2) {
+                        const pathPart = urlParts[1].replace(/^(public|sign)\//, '');
+                        const cleanPath = pathPart.split('?')[0];
+                        
+                        const { data } = await supabase.storage
+                            .from(cleanPath.split('/')[0])
+                            .createSignedUrl(
+                                cleanPath.split('/').slice(1).join('/'),
+                                3600
+                            );
+                        
+                        if (data?.signedUrl) {
+                            track.audio_url = data.signedUrl;
+                        }
+                    }
+                }
+                return track;
+            }) || []);
+
             container.style.cursor = 'pointer';
             container.onclick = () => {
                 window.location.href = getPagePath('/pages/playlist') + '?type=recent';
             };
+
             const img = container.querySelector('.playlist-img');
             img.classList.remove('gradient-blue');
             img.style.backgroundImage = `url('https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/recently%20played.png')`;
+            
             if (history?.length > 0) {
                 container.querySelector('.song-count').textContent = `${history.length} recently played`;
             }

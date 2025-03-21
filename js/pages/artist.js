@@ -89,7 +89,7 @@ class ArtistPage {
     }
 
     async loadTracks() {
-        const { data: tracks, error } = await supabase
+        const { data: tracks } = await supabase
             .from('songs')
             .select(`
                 id,
@@ -107,14 +107,34 @@ class ArtistPage {
             .order('track_number', { ascending: true })
             .limit(10);
 
-        if (error) {
-            console.error('Error loading tracks:', error);
-            return;
-        }
+        if (!tracks?.length) return;
+
+        // Get signed URLs for all tracks
+        const processedTracks = await Promise.all(tracks.map(async (track) => {
+            if (track.audio_url?.includes('supabase.co/storage')) {
+                const urlParts = track.audio_url.split('/storage/v1/object/');
+                if (urlParts.length === 2) {
+                    const pathPart = urlParts[1].replace(/^(public|sign)\//, '');
+                    const cleanPath = pathPart.split('?')[0];
+                    
+                    const { data } = await supabase.storage
+                        .from(cleanPath.split('/')[0])
+                        .createSignedUrl(
+                            cleanPath.split('/').slice(1).join('/'),
+                            3600
+                        );
+                    
+                    if (data?.signedUrl) {
+                        track.audio_url = data.signedUrl;
+                    }
+                }
+            }
+            return track;
+        }));
 
         const container = document.querySelector('.track-list');
-        if (container && tracks?.length > 0) {
-            container.innerHTML = tracks.map((track, index) => `
+        if (container) {
+            container.innerHTML = processedTracks.map((track, index) => `
                 <div class="track-item" data-track-id="${track.id}">
                     <span class="track-number">${index + 1}</span>
                     <img src="${track.cover_url}" alt="${track.title}" width="40" height="40">
@@ -122,37 +142,29 @@ class ArtistPage {
                         <h4>${track.title}</h4>
                         <p>${track.artists.name}</p>
                     </div>
-                    <span class="track-duration">${track.duration || ''}</span>
+                    <span class="track-duration">${track.duration}</span>
                 </div>
             `).join('');
 
             // Add click handlers for tracks
-            container.querySelectorAll('.track-item').forEach((trackElement, index) => {
-                trackElement.addEventListener('click', () => {
-                    const track = tracks[index];
+            container.querySelectorAll('.track-item').forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    const track = processedTracks[index];
+                    if (!track) return;
                     
-                    // Basic URL validation
-                    if (!track.audio_url) {
-                        console.warn('No audio URL available');
-                        alert('Sorry, this track is not available for playback');
-                        return;
-                    }
-
                     const playEvent = new CustomEvent('xm-play-track', {
                         detail: {
                             id: track.id,
                             title: track.title,
                             artist: track.artists.name,
                             audioUrl: track.audio_url,
-                            coverUrl: track.cover_url || '',
+                            coverUrl: track.cover_url,
                             artistId: track.artists.id
                         }
                     });
                     document.dispatchEvent(playEvent);
                 });
             });
-        } else {
-            container.innerHTML = '<p>No tracks available</p>';
         }
     }
 }

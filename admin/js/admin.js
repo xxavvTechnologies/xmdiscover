@@ -89,7 +89,8 @@ class AdminUI {
 
     async handleAction(e) {
         const action = e.target.dataset.action;
-        const type = e.target.dataset.type || e.target.closest('tr, .admin-card')?.dataset.type;
+        const type = e.target.dataset.type || e.target.closest('[data-type]')?.dataset.type || 
+                    this.getTypeFromPath(window.location.pathname);
         const id = e.target.dataset.id;
 
         if (!action) return;
@@ -107,9 +108,14 @@ class AdminUI {
                         if (!type || !id) {
                             throw new Error('Missing type or ID for deletion');
                         }
-                        const cleanType = type.replace(/s$/, ''); // Remove trailing 's' if present
-                        await this.deleteItem(cleanType, id);
-                        e.target.closest('tr, .admin-card')?.remove();
+                        await this.deleteItem(type, id);
+                        const element = e.target.closest('tr, .admin-card');
+                        if (element) {
+                            // Add fade out animation
+                            element.style.transition = 'opacity 0.3s ease-out';
+                            element.style.opacity = '0';
+                            setTimeout(() => element.remove(), 300);
+                        }
                         notifications.show('Item deleted successfully', 'success');
                     }
                     break;
@@ -121,6 +127,77 @@ class AdminUI {
         } catch (error) {
             console.error('Action failed:', error);
             notifications.show(error.message, 'error');
+        }
+    }
+
+    getTypeFromPath(path) {
+        const page = path.split('/').pop().replace('.html', '');
+        // Convert plural to singular for proper API calls
+        const typeMap = {
+            'albums': 'album',
+            'artists': 'artist',
+            'songs': 'song',
+            'playlists': 'playlist',
+            'podcasts': 'podcast'
+        };
+        return typeMap[page] || page;
+    }
+
+    async deleteItem(type, id) {
+        // First check for any dependencies
+        const dependencyChecks = {
+            artist: async () => {
+                const { data: albums } = await this.supabase
+                    .from('albums')
+                    .select('id')
+                    .eq('artist_id', id);
+                if (albums?.length > 0) {
+                    throw new Error('Cannot delete artist with existing albums');
+                }
+            },
+            album: async () => {
+                const { data: songs } = await this.supabase
+                    .from('songs')
+                    .select('id')
+                    .eq('album_id', id);
+                if (songs?.length > 0) {
+                    throw new Error('Cannot delete album with existing songs');
+                }
+            }
+        };
+
+        // Run dependency check if exists for type
+        if (dependencyChecks[type]) {
+            await dependencyChecks[type]();
+        }
+
+        // Handle special deletion cases
+        switch (type) {
+            case 'playlist':
+                // Delete playlist songs first
+                await this.supabase
+                    .from('playlist_songs')
+                    .delete()
+                    .eq('playlist_id', id);
+                break;
+            case 'podcast':
+                // Delete podcast episodes first
+                await this.supabase
+                    .from('podcast_episodes')
+                    .delete()
+                    .eq('podcast_id', id);
+                break;
+        }
+
+        // Delete the item itself
+        const { error } = await this.supabase
+            .from(`${type}s`)
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Delete error:', error);
+            throw new Error(`Failed to delete ${type}: ${error.message}`);
         }
     }
 
@@ -166,14 +243,6 @@ class AdminUI {
         const { error } = await this.supabase
             .from(type + 's')
             .update(data)
-            .eq('id', id);
-        if (error) throw error;
-    }
-
-    async deleteItem(type, id) {
-        const { error } = await this.supabase
-            .from(type + 's')
-            .delete()
             .eq('id', id);
         if (error) throw error;
     }
@@ -345,9 +414,13 @@ class AdminUI {
                 { name: 'title', label: 'Album Title', type: 'text', required: true },
                 { name: 'artist_id', label: 'Artist', type: 'select', required: true, 
                   optionsLoader: () => this.loadArtistOptions() },
-                { name: 'cover', label: 'Album Cover', type: 'file', accept: 'image/*' },
                 { name: 'release_date', label: 'Release Date', type: 'date', required: true },
-                { name: 'songs', label: 'Album Songs', type: 'song-selector', required: true }
+                { name: 'cover', label: 'Album Cover', type: 'file', accept: 'image/*' },
+                { name: 'songs', label: 'Album Songs', type: 'song-selector', required: true },
+                { name: 'status', label: 'Status', type: 'select', required: true, options: [
+                    { value: 'published', label: 'Published' },
+                    { value: 'draft', label: 'Draft' }
+                ]}
             ],
             song: [
                 { name: 'title', label: 'Song Title', type: 'text', required: true },
@@ -366,14 +439,18 @@ class AdminUI {
                         label: album.title
                     })) || [];
                 }},
+                { name: 'release_date', label: 'Release Date', type: 'date', required: true },
                 { name: 'type', label: 'Release Type', type: 'select', options: [
                     { value: 'album_track', label: 'Album Track' },
-                    { value: 'single', label: 'Single' },
-                    { value: 'ep', label: 'EP' }
+                    { value: 'single', label: 'Single' }
                 ]},
                 { name: 'cover', label: 'Song Cover', type: 'file', accept: 'image/*' },
                 { name: 'audio', label: 'Audio File', type: 'file', accept: 'audio/*', required: true },
-                { name: 'duration', label: 'Duration', type: 'text', required: true }
+                { name: 'duration', label: 'Duration', type: 'text', required: true },
+                { name: 'status', label: 'Status', type: 'select', required: true, options: [
+                    { value: 'published', label: 'Published' },
+                    { value: 'draft', label: 'Draft' }
+                ]}
             ],
             playlist: [
                 {

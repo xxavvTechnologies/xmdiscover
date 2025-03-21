@@ -1,0 +1,810 @@
+@import url('css/context-menu.css');
+
+/* Base Player Styles */
+.xm-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    background: rgba(20, 0, 40, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(140, 82, 255, 0.1);
+    z-index: 1000;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.xm-player-content {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Make columns equal width */
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Progress Bar */
+.xm-progress {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    right: 0;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.xm-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.xm-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8c52ff, #ff6b6b);
+    border-radius: 2px;
+    position: relative;
+}
+
+.xm-progress-handle {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.xm-progress-bar:hover .xm-progress-handle {
+    opacity: 1;
+}
+
+.xm-time {
+    color: #b3b3b3;
+    font-size: 0.8rem;
+    min-width: 45px;
+}
+
+/* Track Info */
+.xm-track-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;  /* Limit width of track info */
+    margin-right: auto; /* Push to start of column */
+}
+
+.xm-cover {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.xm-cover:hover {
+    transform: scale(1.05);
+}
+
+.xm-metadata {
+    flex: 1;
+    min-width: 0;
+}
+
+.xm-title {
+    margin: 0;
+    font-size: 0.9rem;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xm-artist {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #b3b3b3;
+}
+
+.xm-type {
+    font-size: 0.7rem;
+    color: #8c52ff;
+}
+
+/* Controls */
+.xm-controls {
+    justify-self: center; /* Center in grid column */
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.xm-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.xm-btn:hover {
+    background: rgba(140, 82, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.xm-btn.play {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    box-shadow: 0 4px 15px rgba(140, 82, 255, 0.3);
+}
+
+.xm-btn.play:hover {
+    transform: scale(1.08);
+}
+
+.xm-btn i {
+    font-size: 1.4rem;
+}
+
+.xm-btn.active {
+    color: #8c52ff;
+}
+
+.xm-btn.menu {
+    display: none;  /* Hide by default on desktop */
+}
+
+/* Volume Control */
+.xm-volume {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.xm-volume-slider {
+    width: 0;
+    overflow: hidden;
+    transition: width 0.3s;
+}
+
+.xm-volume:hover .xm-volume-slider {
+    width: 100px;
+}
+
+.xm-volume-bar {
+    width: 100px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    margin-left: 0.5rem;
+}
+
+.xm-volume-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8c52ff, #ff6b6b);
+    border-radius: 2px;
+}
+
+.xm-volume-handle {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.xm-volume-bar:hover .xm-volume-handle {
+    opacity: 1;
+}
+
+/* Sidebar */
+.xm-sidebar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 350px;
+    height: 100%;
+    background: rgba(20, 0, 40, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 2001;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xm-sidebar.active {
+    right: 0;
+}
+
+.xm-sidebar-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(140, 82, 255, 0.1);
+}
+
+.xm-panels {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+}
+
+.xm-panel {
+    display: none;
+    padding: 1.5rem;
+}
+
+.xm-panel.active {
+    display: block;
+}
+
+/* Fullscreen View */
+.xm-fullscreen {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 0, 20, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 2000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.xm-fullscreen.active {
+    display: flex;
+    opacity: 1;
+}
+
+.xm-fullscreen-content {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.xm-fullscreen-cover {
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 16px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile Styles */
+.xm-mobile-controls {
+    display: none;
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 0, 40, 0.95);
+    padding: 0.5rem;
+    border-radius: 50px;
+    gap: 1rem;
+    z-index: 1001;
+}
+
+@media (max-width: 1024px) {
+    .xm-player-content {
+        grid-template-columns: 250px 1fr 200px;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .xm-player {
+        height: 72px;
+    }
+
+    .xm-player-content {
+        grid-template-columns: 48px 1fr auto;
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .xm-track-info {
+        max-width: calc(100vw - 200px);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .xm-metadata {
+        overflow: hidden;
+    }
+
+    .xm-title, .xm-artist {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .xm-controls {
+        gap: 0.75rem;
+    }
+
+    .xm-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .xm-btn.play {
+        width: 44px;
+        height: 44px;
+    }
+
+    .xm-btn.menu {
+        display: flex;  /* Only show on mobile */
+    }
+
+    .xm-btn.like,  
+    .xm-secondary {
+        display: none;  /* Hide secondary controls on mobile */
+    }
+
+    .xm-menu-dropdown {
+        display: none;  /* Hide by default */
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: rgba(20, 0, 40, 0.98);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(140, 82, 255, 0.1);
+        border-radius: 12px;
+        padding: 0.5rem;
+        min-width: 200px;
+        z-index: 10;
+    }
+
+    .xm-menu-dropdown.active {
+        display: block;  /* Show menu dropdown when active on mobile */
+    }
+
+    .xm-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        color: white;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .xm-menu-item:hover {
+        background: rgba(140, 82, 255, 0.1);
+    }
+
+    .xm-menu-item i {
+        font-size: 1.25rem;
+    }
+
+    .xm-progress {
+        top: 0;
+        padding: 0 0.75rem;
+    }
+
+    .xm-player {
+        height: 120px; /* Reduced height */
+    }
+
+    .xm-player-content {
+        grid-template-columns: 1fr;
+        padding: 0.75rem;
+        gap: 0.75rem;
+        height: 100%;
+        align-content: center; /* Center content vertically */
+    }
+
+    .xm-track-info {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+    }
+
+    .xm-cover {
+        width: 48px;
+        height: 48px;
+    }
+
+    .xm-metadata {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .xm-controls {
+        gap: 1rem;
+        margin-top: 0.25rem;
+    }
+
+    .xm-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .xm-btn.play {
+        width: 44px;
+        height: 44px;
+    }
+
+    .xm-btn i {
+        font-size: 1.2rem;
+    }
+
+    .xm-progress {
+        top: 0;
+        padding: 0.5rem 1rem;
+    }
+
+    .xm-secondary {
+        display: none;
+    }
+
+    .xm-mobile-controls {
+        display: flex;
+        position: fixed;
+        bottom: 130px; /* Position above player */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(20, 0, 40, 0.95);
+        padding: 0.5rem;
+        border-radius: 50px;
+        gap: 0.75rem;
+        z-index: 1001;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Improve scrolling behavior on mobile */
+    main {
+        padding-bottom: 140px; /* Account for player height */
+    }
+
+    .xm-sidebar {
+        width: 100%;
+        right: -100%;
+    }
+
+    .xm-fullscreen-content {
+        padding: 1rem;
+    }
+
+    .xm-fullscreen .xm-title {
+        font-size: 1.5rem;
+    }
+
+    .xm-fullscreen .xm-artist {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .xm-fullscreen .xm-controls {
+        position: fixed;
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: rgba(10, 0, 20, 0.95);
+        backdrop-filter: blur(10px);
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 380px) {
+    .xm-controls {
+        gap: 0.75rem;
+    }
+
+    .xm-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .xm-btn.play {
+        width: 40px;
+        height: 40px;
+    }
+
+    .xm-btn i {
+        font-size: 1.1rem;
+    }
+}
+
+.xm-secondary {
+    width: 100%;
+    max-width: 300px;  /* Limit width of secondary controls */
+    margin-left: auto;  /* Push to end of column */
+    display: flex;
+    justify-content: flex-end; /* Right align controls */
+    gap: 1rem;
+}
+
+/* Fullscreen Player */
+.xm-fullscreen {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 0, 20, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 2000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.xm-fullscreen.active {
+    display: flex;
+    opacity: 1;
+}
+
+.xm-fullscreen .xm-btn.close {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    width: 48px;
+    height: 48px;
+}
+
+.xm-fullscreen-content {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.xm-fullscreen-cover {
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 24px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 3rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.xm-fullscreen .xm-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.xm-fullscreen .xm-artist {
+    font-size: 1.2rem;
+    color: #b3b3b3;
+    margin-bottom: 3rem;
+}
+
+.xm-fullscreen .xm-controls {
+    justify-content: center;
+    gap: 2rem;
+}
+
+.xm-fullscreen .xm-btn {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.xm-fullscreen .xm-btn.play {
+    width: 72px;
+    height: 72px;
+}
+
+.xm-fullscreen-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.xm-tab {
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.xm-tab:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #8c52ff;
+    transform: scaleX(0);
+    transition: transform 0.3s;
+}
+
+.xm-tab.active {
+    color: white;
+}
+
+.xm-tab.active:after {
+    transform: scaleX(1);
+}
+
+.xm-tab-panel {
+    display: none;
+    height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+.xm-tab-panel.active {
+    display: block;
+}
+
+.xm-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 1rem;
+}
+
+.xm-queue-item {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.xm-queue-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.xm-queue-item.active {
+    background: rgba(140, 82, 255, 0.2);
+}
+
+.xm-queue-cover {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+}
+
+.xm-lyrics-content {
+    padding: 1rem;
+    white-space: pre-line;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.xm-queue-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #b3b3b3;
+}
+
+.xm-remove-queue {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.xm-queue-item:hover .xm-remove-queue {
+    opacity: 1;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .xm-fullscreen-content {
+        padding: 1rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .xm-tab-panel {
+        height: calc(100vh - 250px);
+    }
+
+    .xm-fullscreen-cover {
+        margin-bottom: 1.5rem;
+    }
+
+    .xm-fullscreen .xm-controls {
+        margin-top: auto;
+        padding: 1rem;
+    }
+
+    .xm-queue-item {
+        padding: 0.5rem;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .xm-fullscreen {
+        padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+
+    .xm-fullscreen-content {
+        padding: 2rem 1rem;
+    }
+
+    .xm-fullscreen .xm-btn.close {
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+    }
+
+    .xm-fullscreen .xm-title {
+        font-size: 1.5rem;
+    }
+
+    .xm-fullscreen .xm-artist {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .xm-fullscreen .xm-controls {
+        gap: 1rem;
+    }
+
+    .xm-fullscreen .xm-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .xm-fullscreen .xm-btn.play {
+        width: 64px;
+        height: 64px;
+    }
+}

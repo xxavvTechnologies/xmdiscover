@@ -44,17 +44,47 @@ self.addEventListener('fetch', (event) => {
 });
 
 async function handleAudioFetch(request) {
+    // Only handle GET requests, pass through all others
+    if (request.method !== 'GET') {
+        return fetch(request.clone());
+    }
+
     const cache = await caches.open(AUDIO_CACHE);
     const response = await cache.match(request);
     
-    if (response) return response;
+    if (response) {
+        // Check if it's a signed URL that's expired
+        const url = new URL(request.url);
+        if (url.searchParams.has('token')) {
+            try {
+                // Attempt to fetch fresh content
+                const networkResponse = await fetch(request.clone());
+                if (networkResponse.ok) {
+                    await cache.put(request, networkResponse.clone());
+                    return networkResponse;
+                }
+            } catch (error) {
+                console.warn('Failed to refresh signed URL:', error);
+            }
+        }
+        return response;
+    }
     
     try {
-        const networkResponse = await fetch(request);
-        cache.put(request, networkResponse.clone());
+        const networkResponse = await fetch(request.clone());
+        
+        if (networkResponse.ok) {
+            // Only cache successful responses
+            await cache.put(request, networkResponse.clone());
+        }
+        
         return networkResponse;
     } catch (error) {
-        return new Response(null, {status: 404});
+        console.error('Audio fetch failed:', error);
+        return new Response(null, {
+            status: 404,
+            statusText: 'Network request failed'
+        });
     }
 }
 

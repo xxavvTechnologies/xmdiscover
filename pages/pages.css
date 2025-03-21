@@ -160,12 +160,24 @@
 }
 
 .release-img {
+    position: relative;
     width: 100%;
     padding-bottom: 100%;
-    border-radius: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.release-img img,
+.release-img .artwork {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     background-size: cover;
     background-position: center;
-    margin-bottom: 1rem;
 }
 
 .release-card h3 {
@@ -654,6 +666,27 @@
 
 .podcast-info {
     flex: 1;
+}
+
+.podcast-img {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.podcast-img img,
+.podcast-img .artwork {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-size: cover;
+    background-position: center;
 }
 
 .episode-list {

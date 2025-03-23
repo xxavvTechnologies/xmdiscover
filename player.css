@@ -808,3 +808,55 @@
         height: 64px;
     }
 }
+
+/* Ad Overlay Styles */
+.ad-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 0, 20, 0.98);
+    backdrop-filter: blur(20px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-content {
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.ad-info h3 {
+    color: #8c52ff;
+    margin-bottom: 1rem;
+}
+
+.ad-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.ad-title a {
+    color: white;
+    text-decoration: none;
+}
+
+.ad-advertiser {
+    color: #b3b3b3;
+}
+
+.ad-progress {
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    height: 4px;
+    border-radius: 2px;
+}
+
+.ad-progress-bar {
+    height: 100%;
+    background: #8c52ff;
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}

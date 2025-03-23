@@ -1,4 +1,5 @@
 import { supabase, getPagePath } from '../supabase.js';
+import { FollowService } from '../services/follow.js';
 
 class PodcastPage {
     constructor() {
@@ -25,41 +26,59 @@ class PodcastPage {
             document.querySelector('.podcast-description').textContent = podcast.description;
             document.querySelector('.podcast-image').style.backgroundImage = `url('${podcast.image_url}')`;
 
+            // Add follow button
+            const isFollowed = await FollowService.isPodcastFollowed(podcast.id);
+            this.addFollowButton(podcast.id, isFollowed);
+
             const { data: episodes } = await supabase
                 .from('podcast_episodes')
                 .select('*')
                 .eq('podcast_id', this.podcastId)
-                .order('published_at', { ascending: false });
+                .order('episode_number', { ascending: false }); // Changed to false
 
             const container = document.querySelector('.episode-list');
             if (container && episodes?.length) {
-                // Add latest class to first episode
-                const latestEpisode = episodes[0];
-                
-                container.innerHTML = episodes.map((episode, index) => `
-                    <div class="episode-item ${index === 0 ? 'latest' : ''}" data-episode-id="${episode.id}">
-                        <div class="episode-number">#${episode.episode_number || (episodes.length - index)}</div>
-                        <div class="episode-info">
-                            <h3>${episode.title}</h3>
-                            <button class="show-description">
-                                Show Description
-                                <i class="ri-arrow-down-s-line"></i>
+                container.innerHTML = episodes.map((episode, index) => {
+                    // Format date
+                    const publishDate = new Date(episode.published_at);
+                    const formattedDate = publishDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Format episode info
+                    const seasonEpisode = episode.season_number ? 
+                        `S${episode.season_number}:E${episode.episode_number}` : 
+                        `Episode ${episode.episode_number || (episodes.length - index)}`;
+
+                    return `
+                        <div class="episode-item ${index === 0 ? 'latest' : ''}" data-episode-id="${episode.id}">
+                            <div class="episode-number">
+                                <div class="episode-season">${seasonEpisode}</div>
+                            </div>
+                            <div class="episode-info">
+                                <h3>${episode.title}</h3>
+                                <button class="show-description">
+                                    Show Description
+                                    <i class="ri-arrow-down-s-line"></i>
+                                </button>
+                                <div class="episode-description">
+                                    ${episode.description || 'No description available.'}
+                                </div>
+                                <div class="episode-meta">
+                                    <span class="publish-date">${formattedDate}</span>
+                                    •
+                                    <span>${episode.duration || '00:00'}</span>
+                                    ${index === 0 ? '<span class="latest-badge">Latest</span>' : ''}
+                                </div>
+                            </div>
+                            <button class="play-episode" title="Play Episode">
+                                <i class="ri-play-fill"></i>
                             </button>
-                            <div class="episode-description">
-                                ${episode.description || 'No description available.'}
-                            </div>
-                            <div class="episode-meta">
-                                <span>${new Date(episode.published_at).toLocaleDateString()}</span>
-                                •
-                                <span>${episode.duration || '00:00'}</span>
-                                ${index === 0 ? '<span class="latest-badge">Latest</span>' : ''}
-                            </div>
                         </div>
-                        <button class="play-episode" title="Play Episode">
-                            <i class="ri-play-fill"></i>
-                        </button>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 // Add click handlers for descriptions
                 container.querySelectorAll('.show-description').forEach(btn => {
@@ -98,6 +117,41 @@ class PodcastPage {
             alert('Podcast not found');
             window.location.href = getPagePath('/discover');
         }
+    }
+
+    addFollowButton(podcastId, isFollowed) {
+        const buttonContainer = document.querySelector('.podcast-actions') || this.createButtonContainer();
+        
+        buttonContainer.innerHTML = `
+            <button class="follow-btn ${isFollowed ? 'following' : ''}" data-podcast-id="${podcastId}">
+                <i class="ri-${isFollowed ? 'check-line' : 'add-line'}"></i>
+                ${isFollowed ? 'Following' : 'Follow'}
+            </button>
+        `;
+
+        buttonContainer.querySelector('.follow-btn').addEventListener('click', async (e) => {
+            const button = e.target.closest('.follow-btn');
+            const isNowFollowing = !button.classList.contains('following');
+
+            if (isNowFollowing) {
+                await FollowService.followPodcast(podcastId);
+            } else {
+                await FollowService.unfollowPodcast(podcastId);
+            }
+
+            button.classList.toggle('following');
+            button.innerHTML = `
+                <i class="ri-${isNowFollowing ? 'check-line' : 'add-line'}"></i>
+                ${isNowFollowing ? 'Following' : 'Follow'}
+            `;
+        });
+    }
+
+    createButtonContainer() {
+        const container = document.createElement('div');
+        container.className = 'podcast-actions';
+        document.querySelector('.podcast-info').appendChild(container);
+        return container;
     }
 }
 

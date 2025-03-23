@@ -1,5 +1,6 @@
 import { supabase, getPagePath } from '../supabase.js';
 import { updateMetaTags } from '../seo.js';
+import { PlayerStateManager } from '../services/playerState.js';
 
 class PlaylistPage {
     constructor() {
@@ -225,17 +226,10 @@ class PlaylistPage {
                     const track = processedTracks[index];
                     if (!track) return;
                     
-                    const playEvent = new CustomEvent('xm-play-track', {
-                        detail: {
-                            id: track.id,
-                            title: track.title,
-                            artist: track.artists.name,
-                            audioUrl: track.audio_url,
-                            coverUrl: track.cover_url,
-                            artistId: track.artists.id
-                        }
-                    });
-                    document.dispatchEvent(playEvent);
+                    const standardTrack = PlayerStateManager.standardizeTrackInfo(track);
+                    document.dispatchEvent(new CustomEvent('xm-play-track', {
+                        detail: standardTrack
+                    }));
                 });
             });
         }

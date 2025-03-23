@@ -400,6 +400,11 @@ create table if not exists public.podcast_episodes (
     unique(podcast_id, audio_url)
 );
 
+-- Add season and episode number columns to podcast_episodes
+alter table public.podcast_episodes
+    add column if not exists season_number integer,
+    add column if not exists episode_number integer;
+
 -- Create podcast_follows table for user subscriptions
 create table if not exists public.podcast_follows (
     id uuid primary key default uuid_generate_v4(),
@@ -451,4 +456,39 @@ create policy "Admins can manage podcast episodes"
 
 create policy "Users can follow podcasts"
     on public.podcast_follows for all
+    using (user_id = auth.uid());
+
+-- Create tables for following/saving
+create table public.saved_playlists (
+    user_id uuid references auth.users not null,
+    playlist_id uuid references public.playlists not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    primary key (user_id, playlist_id)
+);
+
+create table public.artist_follows (
+    user_id uuid references auth.users not null,
+    artist_id uuid references public.artists not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()),
+    primary key (user_id, artist_id)
+);
+
+-- Add RLS policies
+alter table public.saved_playlists enable row level security;
+alter table public.artist_follows enable row level security;
+
+create policy "Users can view their saved playlists"
+    on public.saved_playlists for select
+    using (user_id = auth.uid());
+
+create policy "Users can save/unsave playlists"
+    on public.saved_playlists for all
+    using (user_id = auth.uid());
+
+create policy "Users can view their artist follows"
+    on public.artist_follows for select
+    using (user_id = auth.uid());
+
+create policy "Users can follow/unfollow artists"
+    on public.artist_follows for all
     using (user_id = auth.uid());

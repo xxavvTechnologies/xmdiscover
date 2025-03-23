@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
                     description: episode.description,
                     audio_url: episode.audioUrl,
                     duration: episode.duration,
-                    episode_number: episode.episodeNumber,
+                    episode_number: parseInt(episode.episodeNumber) || null, // Ensure proper number parsing
                     published_at: new Date(episode.pubDate).toISOString()
                 }));
 

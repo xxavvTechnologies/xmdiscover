@@ -29,8 +29,27 @@ self.addEventListener('install', (event) => {
     );
 });
 
+// Add player state
+let playerState = {
+    currentTrack: null,
+    queue: [],
+    isPlaying: false,
+    currentTime: 0,
+    volume: 1
+};
+
+// Modify fetch event listener to include player state restoration
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
+    
+    // Handle HTML page requests to inject player state
+    if (event.request.mode === 'navigate' || 
+        event.request.destination === 'document') {
+        event.respondWith(
+            handlePageLoad(event.request)
+        );
+        return;
+    }
     
     // Handle different types of requests
     if (url.pathname.includes('/audio/')) {
@@ -42,6 +61,62 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(handleDefaultFetch(event.request));
     }
 });
+
+// Add message event handler for player actions
+self.addEventListener('message', (event) => {
+    if (!event.data) return;
+
+    switch (event.data.type) {
+        case 'UPDATE_PLAYER_STATE':
+            playerState = { ...playerState, ...event.data.state };
+            broadcastPlayerState();
+            break;
+        case 'REQUEST_PLAYER_STATE':
+            event.source.postMessage({
+                type: 'PLAYER_STATE_UPDATE',
+                state: playerState
+            });
+            break;
+    }
+});
+
+// Add function to broadcast player state to all clients
+async function broadcastPlayerState() {
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+        client.postMessage({
+            type: 'PLAYER_STATE_UPDATE',
+            state: playerState
+        });
+    });
+}
+
+// Add function to handle page loads with player state
+async function handlePageLoad(request) {
+    try {
+        const response = await fetch(request);
+        if (!response.ok) return response;
+
+        const originalHtml = await response.text();
+        const modifiedHtml = injectPlayerState(originalHtml);
+
+        return new Response(modifiedHtml, {
+            headers: response.headers
+        });
+    } catch (error) {
+        return fetch(request);
+    }
+}
+
+// Add function to inject player state into HTML
+function injectPlayerState(html) {
+    const stateScript = `
+        <script>
+            window.INITIAL_PLAYER_STATE = ${JSON.stringify(playerState)};
+        </script>
+    `;
+    return html.replace('</head>', `${stateScript}</head>`);
+}
 
 async function handleAudioFetch(request) {
     // Only handle GET requests, pass through all others
@@ -113,20 +188,26 @@ async function handleAssetFetch(request) {
 }
 
 async function handleDefaultFetch(request) {
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const response = await cache.match(request);
-    
-    if (response) return response;
-    
-    try {
-        const networkResponse = await fetch(request);
-        if (networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
+    // Only attempt to use cache for GET requests
+    if (request.method === 'GET') {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        const response = await cache.match(request);
+        
+        if (response) return response;
+        
+        try {
+            const networkResponse = await fetch(request);
+            if (networkResponse.ok) {
+                await cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+        } catch (error) {
+            return new Response(null, {status: 404});
         }
-        return networkResponse;
-    } catch (error) {
-        return new Response(null, {status: 404});
     }
+
+    // For non-GET requests, just try to fetch from network
+    return fetch(request);
 }
 
 // Clean up old caches

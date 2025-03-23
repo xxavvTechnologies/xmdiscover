@@ -1,0 +1,213 @@
+.hero-banner {
+    position: relative;
+    min-height: 600px;
+    padding: 4rem 2rem;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(45deg, rgba(140, 82, 255, 0.15) 0%, rgba(255, 107, 107, 0.15) 100%);
+    border-radius: 32px;
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 600px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-content h1 {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.discover-btn {
+    padding: 1rem 2rem;
+    background: linear-gradient(45deg, #8c52ff, #ff6b6b);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.search-btn {
+    padding: 1rem 2rem;
+    background: rgba(140, 82, 255, 0.1);
+    color: #8c52ff;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hero-artwork {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 50%;
+    height: 100%;
+    background-size: contain;
+    background-position: right center;
+    background-repeat: no-repeat;
+    opacity: 0.8;
+}
+
+.highlight-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.highlight-card {
+    aspect-ratio: 16/9;
+    border-radius: 24px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Grid Layouts */
+.trending-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.release-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.podcast-carousel {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+/* Trend Categories */
+.trend-categories {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.trend-category {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(140, 82, 255, 0.3);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.trend-category.active {
+    background: rgba(140, 82, 255, 0.2);
+    border-color: #8c52ff;
+}
+
+/* Card Styles */
+.release-card {
+    background: rgba(20, 0, 40, 0.3);
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    max-width: 160px;
+    justify-self: center;
+}
+
+.release-card .release-img {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 0.5rem;
+}
+
+.release-card h3 {
+    font-size: 0.95rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.release-card p {
+    font-size: 0.85rem;
+    color: #b3b3b3;
+    margin: 0.25rem 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.release-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 0, 40, 0.5);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .hero-banner {
+        min-height: 400px;
+        padding: 2rem 1rem;
+    }
+
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero-artwork {
+        opacity: 0.3;
+    }
+
+    .highlight-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .release-card {
+        max-width: 120px;
+        padding: 0.5rem;
+    }
+
+    .release-wall {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}

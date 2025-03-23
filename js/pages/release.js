@@ -50,7 +50,14 @@ class ReleasePage {
         artistLink.textContent = release.artists.name;
         artistLink.href = `/pages/artist.html?id=${release.artists.id}`;
         
-        document.querySelector('.release-year').textContent = new Date(release.release_date).getFullYear();
+        // Format release date
+        const releaseDate = new Date(release.release_date);
+        const formattedDate = releaseDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        document.querySelector('.release-year').textContent = formattedDate;
         document.querySelector('.release-image').style.backgroundImage = `url('${release.cover_url}')`;
     }
 

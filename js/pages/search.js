@@ -1,4 +1,5 @@
 import { supabase, getPagePath } from '../supabase.js';
+import { PlayerStateManager } from '../services/playerState.js';
 
 class SearchPage {
     constructor() {
@@ -234,6 +235,11 @@ class SearchPage {
         const section = document.querySelector('.top-result');
         const container = section.querySelector('.top-result-content');
         
+        if (!result) {
+            section.style.display = 'none';
+            return;
+        }
+
         let html = '';
         switch (result.type) {
             case 'artists':
@@ -247,7 +253,10 @@ class SearchPage {
                 break;
             case 'songs':
                 html = `
-                    <div class="top-result-card song" data-id="${result.id}">
+                    <div class="top-result-card song" 
+                         data-track-id="${result.id}"
+                         data-audio-url="${result.audio_url}"
+                         data-cover-url="${result.cover_url}">
                         <div class="result-image" style="background-image: url('${result.cover_url}')"></div>
                         <h3>${result.title}</h3>
                         <p>Song • ${result.artists.name}</p>
@@ -259,6 +268,17 @@ class SearchPage {
 
         container.innerHTML = html;
         section.style.display = 'block';
+
+        // Add click handler for song results
+        const songCard = container.querySelector('.song');
+        if (songCard) {
+            songCard.addEventListener('click', () => {
+                const standardTrack = PlayerStateManager.standardizeTrackInfo(result);
+                document.dispatchEvent(new CustomEvent('xm-play-track', {
+                    detail: standardTrack
+                }));
+            });
+        }
     }
 
     displayArtists(artists) {

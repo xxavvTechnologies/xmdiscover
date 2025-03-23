@@ -25,7 +25,8 @@
     <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
     
     <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="player.css">
+    <link rel="stylesheet" href="player.css">
+    <link rel="stylesheet" href="styles/home.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#8c52ff">
@@ -35,17 +36,66 @@
 </head>
 <body>
     <main>
-        <section class="featured">
-            <h2>Featured Playlists</h2>
-            <div class="playlist-grid"></div>
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1>Your Music Journey Starts Here</h1>
+                <p>Stream and discover endless music, curated playlists, and exclusive content.</p>
+                <div class="hero-actions">
+                    <a href="/discover.html" class="discover-btn">Start Discovering</a>
+                    <a href="/pages/search.html" class="search-btn">
+                        <i class="ri-search-line"></i>
+                        Search Music
+                    </a>
+                </div>
+            </div>
+            <div class="hero-artwork"></div>
+        </div>
+
+        <section class="featured-now">
+            <div class="section-header">
+                <h2>Featured Highlights</h2>
+                <a href="/pages/browse.html?type=featured" class="see-all">See All</a>
+            </div>
+            <div class="highlight-grid">
+                <div class="highlight-card large" data-content="featured-large"></div>
+                <div class="highlight-list" data-content="featured-small"></div>
+            </div>
         </section>
 
-        <section class="welcome">
-            <h2>Welcome to xM DiScover</h2>
-            <p>With free 24/7 access, enjoy all of xxavvMusik's artist catalogue of music, right here, right now. Forever. Discover new music, create playlists, and share your favorites.</p>
-            <div class="welcome-actions">
-                <a href="discover.html" class="discover-btn">Start Discovering</a>
+        <section class="trending-section">
+            <div class="section-header">
+                <h2>What's Hot</h2>
             </div>
+            <div class="trend-categories">
+                <div class="trend-category songs active">Songs</div>
+                <div class="trend-category artists">Artists</div>
+                <div class="trend-category albums">Albums</div>
+            </div>
+            <div class="trending-content" data-content="trending"></div>
+        </section>
+
+        <section class="mood-section">
+            <div class="section-header">
+                <h2>Music For Every Mood</h2>
+                <a href="/pages/browse.html?type=moods" class="see-all">See All</a>
+            </div>
+            <div class="mood-grid" data-content="moods"></div>
+        </section>
+
+        <section class="latest-releases">
+            <div class="section-header">
+                <h2>Fresh Drops</h2>
+                <a href="/pages/browse.html?type=releases" class="see-all">See All</a>
+            </div>
+            <div class="release-wall" data-content="new-releases"></div>
+        </section>
+
+        <section class="podcast-section">
+            <div class="section-header">
+                <h2>Top Podcasts</h2>
+                <a href="/pages/podcasts.html" class="see-all">See All</a>
+            </div>
+            <div class="podcast-carousel" data-content="podcasts"></div>
         </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

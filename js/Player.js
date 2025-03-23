@@ -2,6 +2,8 @@ import { supabase } from './supabase.js';
 import { notifications } from './services/notifications.js';
 import { QueueService } from './services/queue.js';
 import { getLyrics } from './services/genius.js';
+import { PlayerStateManager } from './services/playerState.js';
+import { AdManager } from './services/adManager.js';
 
 export class Player {
     constructor() {
@@ -17,6 +19,7 @@ export class Player {
         this.contextMenu = document.querySelector('.context-menu');
         this.contextTarget = null;
         this.setupContextMenu();
+        this.adManager = new AdManager();
 
         // Initialize player elements
         this.elements = {
@@ -55,6 +58,21 @@ export class Player {
             lyricsContent: document.querySelector('.xm-lyrics-content')
         };
 
+        // Initialize from service worker state if available
+        if (window.INITIAL_PLAYER_STATE) {
+            this.restoreState(window.INITIAL_PLAYER_STATE);
+        }
+
+        // Listen for state updates from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.type === 'PLAYER_STATE_UPDATE') {
+                this.syncState(event.data.state);
+            }
+        });
+
+        // Request initial state
+        this.requestStateFromServiceWorker();
+
         // Add event listener for play track events
         document.addEventListener('xm-play-track', async (e) => {
             await this.playTrack(e.detail);
@@ -64,6 +82,10 @@ export class Player {
         this.elements.cover?.addEventListener('click', () => this.toggleFullscreen());
 
         this.setupEventListeners();
+
+        PlayerStateManager.init();
+        this.setupMediaSession();
+        this.handleVisibilityChange();
     }
 
     setupEventListeners() {
@@ -93,7 +115,13 @@ export class Player {
         this.elements.smartQueueButton?.addEventListener('click', () => this.generateSmartQueue());
 
         // Audio element events
-        this.audioElement.addEventListener('timeupdate', () => this.handleTimeUpdate());
+        this.audioElement.addEventListener('timeupdate', () => {
+            this.handleTimeUpdate();
+            // Update service worker state periodically (e.g., every 5 seconds)
+            if (Math.floor(this.audioElement.currentTime) % 5 === 0) {
+                this.updateServiceWorkerState();
+            }
+        });
         this.audioElement.addEventListener('loadedmetadata', () => this.handleMetadataLoaded());
         this.audioElement.addEventListener('ended', () => this.handleTrackEnded());
 
@@ -159,6 +187,31 @@ export class Player {
         });
     }
 
+    setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => this.togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => this.togglePlay());
+            navigator.mediaSession.setActionHandler('nexttrack', () => this.next());
+            navigator.mediaSession.setActionHandler('previoustrack', () => this.prev());
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+                this.audioElement.currentTime = details.seekTime;
+            });
+        }
+    }
+
+    handleVisibilityChange() {
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && !this.audioElement.paused) {
+                // Keep playing in background by requesting a wake lock
+                try {
+                    navigator.wakeLock?.request('screen');
+                } catch (err) {
+                    console.warn('Wake lock not supported');
+                }
+            }
+        });
+    }
+
     updateProgress(e) {
         const rect = this.elements.progressBar.getBoundingClientRect();
         const percent = Math.min(Math.max(0, (e.clientX - rect.left) / rect.width), 1);
@@ -187,41 +240,58 @@ export class Player {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    async playTrack(trackInfo) {
+    async playTrack(trackInfo, startTime = 0) {
         try {
             if (this.loading) return;
+            
+            // Check for ads before playing new track
+            const playedAds = await this.adManager.checkForAds(
+                this.currentTrack ? 'interval' : 'force'
+            );
+            
             this.loading = true;
             document.body.classList.add('loading-track');
 
-            const signedAudioUrl = await QueueService.getSignedUrl(trackInfo.audioUrl);
+            // Standardize track info
+            const standardTrack = PlayerStateManager.standardizeTrackInfo(trackInfo);
+            const signedAudioUrl = await QueueService.getSignedUrl(standardTrack.audioUrl);
+            
             if (!signedAudioUrl) {
                 throw new Error('Could not access audio file');
             }
 
             this.currentTrack = {
-                ...trackInfo,
+                ...standardTrack,
                 audioUrl: signedAudioUrl
             };
 
             try {
                 this.audioElement.src = signedAudioUrl;
+                this.audioElement.currentTime = startTime;
                 await this.audioElement.play();
                 this.updatePlayerUI();
 
+                // Update media session
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.metadata = new MediaMetadata({
-                        title: trackInfo.title,
-                        artist: trackInfo.artist,
-                        artwork: [{ src: trackInfo.coverUrl }]
+                        title: standardTrack.title,
+                        artist: standardTrack.artist,
+                        artwork: [
+                            { src: standardTrack.coverUrl, sizes: '512x512', type: 'image/jpeg' }
+                        ]
                     });
                 }
+
+                // Update state manager
+                PlayerStateManager.updateState(this.currentTrack, this.queue);
+
             } catch (err) {
                 console.error('Playback error:', err);
                 throw new Error('Could not play audio file');
             }
 
             this.updateQueueUI();
-            
+
         } catch (error) {
             this.handlePlaybackError(error);
         } finally {
@@ -251,6 +321,7 @@ export class Player {
         this.elements.timeCurrent.textContent = '0:00';
         this.elements.timeTotal.textContent = '0:00';
         this.updatePlayerUI();
+        this.adManager.reset();
     }
 
     updatePlayerUI() {
@@ -275,6 +346,20 @@ export class Player {
         if (this.elements.fullscreenPlayer?.classList.contains('active')) {
             this.updateFullscreenUI();
         }
+
+        // Disable controls during ads
+        const isAdBreak = this.adManager.adBreakInProgress;
+        this.elements.nextButton.disabled = isAdBreak;
+        this.elements.prevButton.disabled = isAdBreak;
+        this.elements.repeatButton.disabled = isAdBreak;
+        this.elements.shuffleButton.disabled = isAdBreak;
+        this.elements.smartQueueButton.disabled = isAdBreak;
+
+        [this.elements.nextButton, this.elements.prevButton, 
+         this.elements.repeatButton, this.elements.shuffleButton,
+         this.elements.smartQueueButton].forEach(btn => {
+            if (btn) btn.style.opacity = isAdBreak ? '0.5' : '1';
+        });
     }
 
     togglePlay() {
@@ -293,14 +378,20 @@ export class Player {
         });
     }
 
-    next() {
+    async next() {
+        if (this.adManager.adBreakInProgress) return;
         if (this.queue.length > 0) {
+            // Check for ads if user is skipping tracks
+            await this.adManager.checkForAds('skip');
+            
             const nextTrack = this.queue.shift();
-            this.playTrack(nextTrack);
+            await this.playTrack(nextTrack);
+            this.updateQueueUI();
         }
     }
 
     prev() {
+        if (this.adManager.adBreakInProgress) return;
         // Implement previous track logic
         if (this.audioElement.currentTime > 3) {
             this.audioElement.currentTime = 0;
@@ -414,6 +505,7 @@ export class Player {
         this.audioElement.volume = volume;
         this.elements.volumeFill.style.width = `${volume * 100}%`;
         this.updateVolumeIcon(volume);
+        this.updateServiceWorkerState();
     }
 
     updateVolumeIcon(volume) {
@@ -472,12 +564,18 @@ export class Player {
         }, 300);
     }
 
-    handleTrackEnded() {
+    async handleTrackEnded() {
         if (this.audioElement.loop) {
             this.audioElement.play();
-        } else if (this.queue.length > 0) {
+            return;
+        }
+
+        // Check for ads before playing next track
+        await this.adManager.checkForAds('interval');
+
+        if (this.queue.length > 0) {
             const nextTrack = this.queue.shift();
-            this.playTrack(nextTrack);
+            await this.playTrack(nextTrack);
             this.updateQueueUI();
         }
     }
@@ -566,6 +664,11 @@ export class Player {
 
     updateQueueUI() {
         if (!this.elements.queueList) return;
+
+        // Disable queue interaction during ads
+        const isAdBreak = this.adManager.adBreakInProgress;
+        this.elements.queueList.style.pointerEvents = isAdBreak ? 'none' : 'auto';
+        this.elements.queueList.style.opacity = isAdBreak ? '0.5' : '1';
 
         const queueHtml = this.queue.map((track, index) => `
             <div class="xm-queue-item${track.id === this.currentTrack?.id ? ' active' : ''}" data-index="${index}">
@@ -721,5 +824,43 @@ export class Player {
         }
         // Add similar handling for albums and episodes if needed
         return null;
+    }
+
+    requestStateFromServiceWorker() {
+        navigator.serviceWorker.controller?.postMessage({
+            type: 'REQUEST_PLAYER_STATE'
+        });
+    }
+
+    restoreState(state) {
+        if (state.currentTrack) {
+            this.currentTrack = state.currentTrack;
+            this.queue = state.queue;
+            this.updatePlayerUI();
+            if (state.isPlaying) {
+                this.playTrack(state.currentTrack, state.currentTime);
+            }
+            this.setVolume(state.volume);
+        }
+    }
+
+    syncState(state) {
+        // Only sync if we're not currently playing
+        if (!this.currentTrack) {
+            this.restoreState(state);
+        }
+    }
+
+    updateServiceWorkerState() {
+        navigator.serviceWorker.controller?.postMessage({
+            type: 'UPDATE_PLAYER_STATE',
+            state: {
+                currentTrack: this.currentTrack,
+                queue: this.queue,
+                isPlaying: !this.audioElement.paused,
+                currentTime: this.audioElement.currentTime,
+                volume: this.audioElement.volume
+            }
+        });
     }
 }

@@ -2,7 +2,32 @@ import { supabase, getPagePath } from './supabase.js';
 
 class LibraryUI {
     constructor() {
+        this.sortSelect = document.querySelector('.sort-select');
+        this.filterInput = document.querySelector('.filter-input');
+        this.setupEventListeners();
         this.loadContent();
+    }
+
+    setupEventListeners() {
+        // Setup tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+                this.switchTab(tabName);
+            });
+        });
+
+        // Setup quick access cards
+        document.querySelectorAll('.quick-access-grid .playlist-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const type = card.dataset.type;
+                window.location.href = getPagePath('/pages/playlist') + `?type=${type}`;
+            });
+        });
+
+        // Setup filtering and sorting
+        this.filterInput?.addEventListener('input', (e) => this.filterPlaylists(e.target.value));
+        this.sortSelect?.addEventListener('change', () => this.sortPlaylists());
     }
 
     async loadContent() {
@@ -15,9 +40,11 @@ class LibraryUI {
 
         await Promise.all([
             this.loadUserPlaylists(session.user.id),
+            this.loadSavedPlaylists(session.user.id),
             this.loadLikedSongs(session.user.id),
             this.loadRecentlyPlayed(session.user.id),
-            this.loadFollowedPodcasts(session.user.id) // Add this
+            this.loadFollowedArtists(session.user.id),
+            this.loadFollowedPodcasts(session.user.id)
         ]);
     }
 
@@ -41,13 +68,45 @@ class LibraryUI {
             `;
 
             container.innerHTML = createPlaylistBtn + (playlists?.map(playlist => `
-                <div class="playlist-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${playlist.id}'">
+                <div class="playlist-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${playlist.id}'" data-created="${playlist.created_at}">
                     <div class="playlist-img" style="background-image: url('${playlist.cover_url}')"></div>
                     <h3>${playlist.name}</h3>
                     <p>${playlist.description || `${playlist.playlist_songs[0]?.count || 0} songs`}</p>
                     <span class="playlist-privacy">${playlist.is_public ? 'Public' : 'Private'}</span>
                 </div>
             `).join('') || '');
+        }
+    }
+
+    async loadSavedPlaylists(userId) {
+        const { data: playlists } = await supabase
+            .from('saved_playlists')
+            .select(`
+                playlists (
+                    id,
+                    name, 
+                    description,
+                    cover_url,
+                    created_at,
+                    profiles (username, display_name),
+                    playlist_songs (count)
+                )
+            `)
+            .eq('user_id', userId);
+
+        const container = document.querySelector('[data-content="my-playlists"]');
+        if (container && playlists) {
+            const savedPlaylistsHtml = playlists.map(({ playlists: playlist }) => `
+                <div class="playlist-card saved" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${playlist.id}'" data-created="${playlist.created_at}">
+                    <div class="playlist-img" style="background-image: url('${playlist.cover_url}')"></div>
+                    <h3>${playlist.name}</h3>
+                    <p>By ${playlist.profiles?.display_name || playlist.profiles?.username}</p>
+                    <span class="saved-badge">Saved</span>
+                </div>
+            `).join('');
+
+            // Append saved playlists after user's playlists
+            container.insertAdjacentHTML('beforeend', savedPlaylistsHtml);
         }
     }
 
@@ -139,6 +198,31 @@ class LibraryUI {
         }
     }
 
+    async loadFollowedArtists(userId) {
+        const { data: follows } = await supabase
+            .from('artist_follows')
+            .select(`
+                artists (
+                    id,
+                    name,
+                    image_url,
+                    genres
+                )
+            `)
+            .eq('user_id', userId);
+
+        const container = document.querySelector('[data-content="followed-artists"]');
+        if (container) {
+            container.innerHTML = follows?.map(({ artists: artist }) => `
+                <div class="artist-card" onclick="window.location.href='${getPagePath('/pages/artist')}?id=${artist.id}'">
+                    <div class="artist-img" style="background-image: url('${artist.image_url}')"></div>
+                    <h3>${artist.name}</h3>
+                    <p>${artist.genres?.join(', ') || ''}</p>
+                </div>
+            `).join('') || '<p>No followed artists</p>';
+        }
+    }
+
     async loadFollowedPodcasts(userId) {
         const { data: follows } = await supabase
             .from('podcast_follows')
@@ -163,6 +247,51 @@ class LibraryUI {
                 </div>
             `).join('') || '<p>No followed podcasts</p>';
         }
+    }
+
+    filterPlaylists(query) {
+        const cards = document.querySelectorAll('[data-content="my-playlists"] .playlist-card');
+        query = query.toLowerCase();
+
+        cards.forEach(card => {
+            const title = card.querySelector('h3').textContent.toLowerCase();
+            const visible = title.includes(query);
+            card.style.display = visible ? '' : 'none';
+        });
+    }
+
+    sortPlaylists() {
+        const container = document.querySelector('[data-content="my-playlists"]');
+        const cards = Array.from(container.children);
+        const sortBy = this.sortSelect.value;
+
+        cards.sort((a, b) => {
+            switch(sortBy) {
+                case 'name':
+                    return a.querySelector('h3').textContent.localeCompare(b.querySelector('h3').textContent);
+                case 'tracks':
+                    return parseInt(b.querySelector('.song-count').textContent) - 
+                           parseInt(a.querySelector('.song-count').textContent);
+                case 'recent':
+                default:
+                    return new Date(b.dataset.created) - new Date(a.dataset.created);
+            }
+        });
+
+        container.innerHTML = '';
+        cards.forEach(card => container.appendChild(card));
+    }
+
+    switchTab(tabName) {
+        // Update button states
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        // Update panel visibility
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.dataset.panel === tabName);
+        });
     }
 }
 

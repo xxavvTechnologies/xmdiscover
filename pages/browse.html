@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse - xM DiScover</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="../styles/browse.css">
+    <link rel="stylesheet" href="../player.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#8c52ff">
+</head>
+<body>
+    <main>
+        <div class="browse-header">
+            <h1>Browse</h1>
+            <div class="browse-filters">
+                <div class="filter-group">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select">
+                        <option value="recent">Recent</option>
+                        <option value="name">Name</option>
+                        <option value="popular">Popular</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="browse-content"></div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/components.js"></script>
+    <script type="module" src="../js/pages/browse.js"></script>
+    <script type="module">
+        import { notifications } from '../js/services/notifications.js';
+        notifications.init();
+    </script>
+</body>
+</html>

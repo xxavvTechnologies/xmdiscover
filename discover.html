@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discover - xM DiScover</title>
     <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="player.css">
+    <link rel="stylesheet" href="player.css">
+    <link rel="stylesheet" href="styles/discover.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
     <link rel="manifest" href="/manifest.json">
@@ -16,19 +17,75 @@
 </head>
 <body>
     <main>
-        <section class="featured">
-            <h2>New Releases</h2>
-            <div class="playlist-grid" data-content="new-releases"></div>
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>Discover New Music</h1>
+                <p>Your personalized music journey starts here</p>
+            </div>
         </section>
-        
-        <section class="featured">
-            <h2>Popular Artists</h2>
+
+        <section class="featured-section">
+            <div class="section-header">
+                <h2>Featured</h2>
+                <a href="/pages/browse.html?type=featured" class="see-all">See All</a>
+            </div>
+            <div class="featured-grid" data-content="featured"></div>
+        </section>
+
+        <section class="new-releases">
+            <div class="section-header">
+                <h2>New Releases</h2>
+                <a href="/pages/browse.html?type=releases" class="see-all">See All</a>
+            </div>
+            <div class="release-grid" data-content="new-releases"></div>
+        </section>
+
+        <section class="top-artists">
+            <div class="section-header">
+                <h2>Popular Artists</h2>
+                <a href="/pages/browse.html?type=artists" class="see-all">See All</a>
+            </div>
             <div class="artist-grid" data-content="artists"></div>
         </section>
 
-        <section class="featured">
-            <h2>Featured Playlists</h2>
+        <section class="featured-playlists">
+            <div class="section-header">
+                <h2>Featured Playlists</h2>
+                <a href="/pages/browse.html?type=playlists" class="see-all">See All</a>
+            </div>
             <div class="playlist-grid" data-content="playlists"></div>
+        </section>
+
+        <section class="genres">
+            <div class="section-header">
+                <h2>Browse by Genre</h2>
+                <a href="/pages/browse.html?type=genres" class="see-all">See All</a>
+            </div>
+            <div class="genre-grid" data-content="genres"></div>
+        </section>
+
+        <section class="podcasts">
+            <div class="section-header">
+                <h2>Popular Podcasts</h2>
+                <a href="/pages/podcasts.html" class="see-all">See All</a>
+            </div>
+            <div class="podcast-grid" data-content="podcasts"></div>
+        </section>
+
+        <section class="mood-mixes">
+            <div class="section-header">
+                <h2>Mood Mixes</h2>
+                <a href="/pages/browse.html?type=moods" class="see-all">See All</a>
+            </div>
+            <div class="mood-grid" data-content="moods"></div>
+        </section>
+
+        <section class="charts">
+            <div class="section-header">
+                <h2>Top Charts</h2>
+                <a href="/pages/browse.html?type=charts" class="see-all">See All</a>
+            </div>
+            <div class="chart-grid" data-content="charts"></div>
         </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

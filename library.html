@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library - xM DiScover</title>
     <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="player.css">
+    <link rel="stylesheet" href="player.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
     <link rel="manifest" href="/manifest.json">
@@ -13,29 +13,79 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="apple-touch-icon" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+    <link rel="stylesheet" href="styles/library.css">
 </head>
 <body>
     <main>
-        <section class="featured">
-            <h2>Your Playlists</h2>
-            <div class="playlist-grid" data-content="my-playlists"></div>
-        </section>
-
-        <section class="featured">
-            <h2>System Playlists</h2>
-            <div class="playlist-grid">
-                <div class="playlist-card" data-content="liked-songs">
-                    <div class="playlist-img gradient-purple"></div>
-                    <h3>Liked Songs</h3>
-                    <p class="song-count">0 liked songs</p>
-                </div>
-                <div class="playlist-card" data-content="recently-played">
-                    <div class="playlist-img gradient-blue"></div>
-                    <h3>Recently Played</h3>
-                    <p class="song-count">0 tracks</p>
-                </div>
+        <div class="library-header">
+            <h1>Your Library</h1>
+            <div class="library-actions">
+                <button class="create-playlist-btn" onclick="window.location.href='pages/create-playlist.html'">
+                    <i class="ri-add-line"></i>
+                    Create Playlist
+                </button>
             </div>
-        </section>
+        </div>
+
+        <div class="library-grid">
+            <!-- System Playlists -->
+            <section class="library-section system-playlists">
+                <div class="section-header">
+                    <h2>Quick Access</h2>
+                </div>
+                <div class="quick-access-grid">
+                    <div class="playlist-card gradient-purple" data-type="liked">
+                        <div class="playlist-img"></div>
+                        <div class="playlist-info">
+                            <h3>Liked Songs</h3>
+                            <p class="song-count">0 songs</p>
+                        </div>
+                    </div>
+                    <div class="playlist-card gradient-blue" data-type="recent">
+                        <div class="playlist-img"></div>
+                        <div class="playlist-info">
+                            <h3>Recently Played</h3>
+                            <p class="song-count">0 tracks</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Playlists -->
+            <section class="library-section user-playlists">
+                <div class="section-header">
+                    <h2>Your Playlists</h2>
+                    <div class="section-filters">
+                        <input type="text" placeholder="Filter playlists..." class="filter-input">
+                        <select class="sort-select">
+                            <option value="recent">Recent</option>
+                            <option value="name">Name</option>
+                            <option value="tracks">Tracks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="playlist-grid" data-content="my-playlists"></div>
+            </section>
+
+            <!-- Following Section -->
+            <section class="library-section following">
+                <div class="section-header">
+                    <h2>Following</h2>
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="artists">Artists</button>
+                        <button class="tab-btn" data-tab="podcasts">Podcasts</button>
+                    </div>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-panel active" data-panel="artists">
+                        <div class="artist-grid" data-content="followed-artists"></div>
+                    </div>
+                    <div class="tab-panel" data-panel="podcasts">
+                        <div class="podcast-grid" data-content="followed-podcasts"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="js/components.js"></script>

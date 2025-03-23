@@ -1,0 +1,283 @@
+.hero-section {
+    position: relative;
+    height: 400px;
+    background: linear-gradient(45deg, #8c52ff, #5271ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 2rem;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.hero-content {
+    color: white;
+    z-index: 1;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.see-all {
+    color: #8c52ff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.see-all:hover {
+    color: #9f6fff;
+}
+
+/* Featured Section */
+.featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.featured-card {
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.featured-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.3s;
+}
+
+.featured-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 2rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+}
+
+/* Genre Section */
+.genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.genre-card {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.3s;
+}
+
+.genre-card:hover {
+    transform: scale(1.05);
+}
+
+/* Mood Mixes */
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.mood-card {
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Charts Section */
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.chart-card {
+    background: rgba(20, 0, 40, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+}
+
+.chart-tracks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.chart-track {
+    display: grid;
+    grid-template-columns: auto 40px 1fr;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-section {
+        height: 300px;
+    }
+
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .featured-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Grid Layouts */
+.featured-grid,
+.release-grid,
+.artist-grid,
+.playlist-grid,
+.genre-grid,
+.podcast-grid,
+.mood-grid,
+.chart-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.featured-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.release-grid,
+.playlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.artist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* Card Styles */
+.playlist-card,
+.release-card,
+.artist-card,
+.podcast-card,
+.mood-card {
+    background: rgba(20, 0, 40, 0.3);
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.playlist-img,
+.release-img,
+.artist-img,
+.podcast-img,
+.mood-img {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 1rem;
+}
+
+.artist-img {
+    border-radius: 50%;
+}
+
+/* Card Text */
+.playlist-card h3,
+.release-card h3,
+.artist-card h3,
+.podcast-card h3,
+.mood-card h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.playlist-card p,
+.release-card p,
+.artist-card p,
+.podcast-card p,
+.mood-card p {
+    font-size: 0.9rem;
+    color: #b3b3b3;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hover Effects */
+.playlist-card:hover,
+.release-card:hover,
+.artist-card:hover,
+.podcast-card:hover,
+.mood-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 0, 40, 0.5);
+}
+
+/* Chart specific styles */
+.chart-track {
+    grid-template-columns: 30px 40px 1fr;
+}
+
+.chart-track img {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.chart-track .rank {
+    color: #8c52ff;
+    font-weight: bold;
+}
+
+/* Add spacing between sections */
+main > section {
+    margin-bottom: 4rem;
+}

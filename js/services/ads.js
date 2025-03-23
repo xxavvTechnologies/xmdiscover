@@ -35,14 +35,15 @@ export class AdService {
             document.body.appendChild(adContainer);
 
             // Play ads sequentially
-            for (const ad of ads) {
-                await this.playAd(ad, adContainer);
-                
-                // Update play count
+            let adCount = Math.min(4, ads.length); // Play 4 ads max
+            for (let i = 0; i < adCount; i++) {
+                await this.playAd(ads[i], adContainer);
+
+                // Update play count after each ad
                 await supabase
                     .from('ads')
-                    .update({ play_count: ad.play_count + 1 })
-                    .eq('id', ad.id);
+                    .update({ play_count: ads[i].play_count + 1 })
+                    .eq('id', ads[i].id);
             }
 
             // Clean up
@@ -57,9 +58,25 @@ export class AdService {
 
     static async playAd(ad, container) {
         return new Promise((resolve) => {
-            // Create audio element
             const audio = new Audio(ad.audio_url);
             
+            // Prevent seeking
+            audio.addEventListener('seeking', () => {
+                audio.currentTime = audio.duration * (audio.currentTime / audio.duration);
+            });
+            
+            // Block keyboard shortcuts
+            const keyHandler = (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    audio.paused ? audio.play() : audio.pause();
+                } else if (['ArrowLeft', 'ArrowRight', 'MediaTrackNext', 'MediaTrackPrevious'].includes(e.code)) {
+                    e.preventDefault();
+                }
+            };
+            
+            document.addEventListener('keydown', keyHandler);
+
             // Update UI
             const titleEl = container.querySelector('.ad-title');
             const advertiserEl = container.querySelector('.ad-advertiser');
@@ -88,6 +105,7 @@ export class AdService {
 
             // Handle completion
             audio.addEventListener('ended', () => {
+                document.removeEventListener('keydown', keyHandler);
                 audio.remove();
                 resolve();
             });

@@ -151,6 +151,54 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
+/* Grid Card Styles */
+.admin-card {
+    background: rgba(20, 0, 40, 0.95);
+    border-radius: 16px;
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.admin-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(140, 82, 255, 0.3);
+}
+
+.admin-card .card-image {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+}
+
+.admin-card .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-card .card-content {
+    padding: 1.5rem;
+}
+
+.admin-card .card-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-card .card-content p {
+    color: #b3b3b3;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.admin-card .card-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(140, 82, 255, 0.1);
+    display: flex;
+    gap: 1rem;
+}
+
 .admin-stat {
     font-size: 2.5rem;
     font-weight: 700;
@@ -504,4 +552,83 @@
 
 .remove-song:hover {
     background: rgba(255, 107, 107, 0.1);
+}
+
+/* Mood Card Styles */
+.admin-card .card-image {
+    width: 100%;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.admin-card .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-card .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    background: rgba(140, 82, 255, 0.1);
+    color: #8c52ff;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+}
+
+.admin-card .count {
+    color: #b3b3b3;
+    font-size: 0.8rem;
+}
+
+/* Add navigation group styles */
+.admin-nav-group {
+    position: relative;
+    display: inline-block;
+}
+
+.admin-nav-group:hover .admin-nav-dropdown {
+    display: block;
+}
+
+.admin-nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: rgba(20, 0, 40, 0.98);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    z-index: 100;
+}
+
+.admin-nav-dropdown a {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+}
+
+.admin-nav-dropdown a:last-child {
+    margin-bottom: 0;
+}
+
+.admin-nav-group > .nav-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    color: white;
+    cursor: pointer;
+}
+
+.admin-nav-group > .nav-label:after {
+    content: '▾';
+    font-size: 0.8rem;
+    opacity: 0.5;
 }

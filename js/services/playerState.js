@@ -29,9 +29,10 @@ export const PlayerStateManager = {
             id: track.id,
             title: track.title,
             artist: track.artists?.name || track.artist || 'Unknown Artist',
-            audioUrl: track.audio_url,
-            coverUrl: track.cover_url,
-            artistId: track.artists?.id || track.artist_id,
+            audioUrl: track.audio_url || track.audioUrl,
+            coverUrl: track.cover_url || track.coverUrl,
+            artistId: track.artists?.id || track.artistId,
+            type: track.type || 'song', // Add type to track info
             duration: track.duration
         };
     }

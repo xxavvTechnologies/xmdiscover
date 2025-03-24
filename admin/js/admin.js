@@ -224,6 +224,15 @@ class AdminUI {
                 case 'podcasts.html':
                     await this.loadPodcasts();
                     break;
+                case 'genres.html':
+                    await this.loadGenres();
+                    break;
+                case 'moods.html':
+                    await this.loadMoods();
+                    break;
+                case 'charts.html':
+                    await this.loadCharts();
+                    break;
             }
         } catch (error) {
             console.error('Failed to load page data:', error);
@@ -385,6 +394,85 @@ class AdminUI {
         `).join('');
     }
 
+    async loadMoods() {
+        const { data: moods } = await this.supabase
+            .from('moods')
+            .select('*');
+        
+        const container = document.querySelector('.admin-grid');
+        if (!container) return;
+    
+        container.innerHTML = moods?.map(mood => `
+            <div class="admin-card">
+                <div class="card-image" style="background-color: ${mood.color}">
+                    <img src="${mood.cover_url || ''}" alt="${mood.name}">
+                </div>
+                <div class="card-content">
+                    <h3>${mood.name}</h3>
+                    <p>${mood.description || ''}</p>
+                </div>
+                <div class="card-actions">
+                    <button class="admin-btn" data-action="edit" data-id="${mood.id}">Edit</button>
+                    <button class="admin-btn" data-action="delete" data-id="${mood.id}">Delete</button>
+                </div>
+            </div>
+        `).join('') || '<p>No moods found</p>';
+    }
+    
+    async loadCharts() {
+        const { data: charts } = await this.supabase
+            .from('charts')
+            .select('*, chart_entries(count)');
+        
+        const container = document.querySelector('.admin-grid');
+        if (!container) return;
+    
+        container.innerHTML = charts?.map(chart => `
+            <div class="admin-card">
+                <div class="card-image">
+                    <img src="${chart.cover_url || ''}" alt="${chart.name}">
+                </div>
+                <div class="card-content">
+                    <h3>${chart.name}</h3>
+                    <p>${chart.description || ''}</p>
+                    <span class="badge">${chart.type}</span>
+                    <span class="count">${chart.chart_entries[0]?.count || 0} tracks</span>
+                </div>
+                <div class="card-actions">
+                    <button class="admin-btn" data-action="edit" data-id="${chart.id}">Edit</button>
+                    <button class="admin-btn" data-action="delete" data-id="${chart.id}">Delete</button>
+                </div>
+            </div>
+        `).join('') || '<p>No charts found</p>';
+    }
+
+    async loadGenres() {
+        const { data: genres } = await supabase
+            .from('genres')
+            .select('*')
+            .order('name');
+    
+        const container = document.querySelector('.admin-grid');
+        if (!container) return;
+    
+        container.innerHTML = genres?.map(genre => `
+            <div class="admin-card">
+                <div class="card-image">
+                    <img src="${genre.image_url || ''}" alt="${genre.name}">
+                </div>
+                <div class="card-content">
+                    <h3>${genre.name}</h3>
+                    <p>${genre.description || ''}</p>
+                    ${genre.parent_id ? '<span class="badge">Sub-genre</span>' : ''}
+                </div>
+                <div class="card-actions">
+                    <button class="admin-btn" data-action="edit" data-id="${genre.id}">Edit</button>
+                    <button class="admin-btn" data-action="delete" data-id="${genre.id}">Delete</button>
+                </div>
+            </div>
+        `).join('') || '<p>No genres found</p>';
+    }
+
     async loadArtistOptions() {
         const { data: artists } = await supabase
             .from('artists')
@@ -506,6 +594,73 @@ class AdminUI {
                     { value: 'published', label: 'Published' },
                     { value: 'draft', label: 'Draft' }
                 ]}
+            ],
+            mood: [
+                { name: 'name', label: 'Mood Name', type: 'text', required: true },
+                { name: 'description', label: 'Description', type: 'textarea' },
+                { name: 'cover', label: 'Cover Image', type: 'file', accept: 'image/*' },
+                { name: 'color', label: 'Theme Color', type: 'color' },
+                { name: 'songs', label: 'Songs', type: 'song-selector', required: true }
+            ],
+
+            genre: [
+                { name: 'name', label: 'Genre Name', type: 'text', required: true },
+                { name: 'description', label: 'Description', type: 'textarea' },
+                { name: 'cover', label: 'Cover Image', type: 'file', accept: 'image/*' },
+                { name: 'parent_id', label: 'Parent Genre', type: 'select',
+                  optionsLoader: () => this.loadGenreOptions() }
+            ],
+
+            chart: [
+                { name: 'name', label: 'Chart Name', type: 'text', required: true },
+                { name: 'description', label: 'Description', type: 'textarea' },
+                { name: 'type', label: 'Chart Type', type: 'select', required: true,
+                  options: [
+                    { value: 'daily', label: 'Daily Top' },
+                    { value: 'weekly', label: 'Weekly Top' },
+                    { value: 'trending', label: 'Trending' }
+                  ]},
+                { name: 'cover', label: 'Cover Image', type: 'file', accept: 'image/*' },
+                { name: 'start_date', label: 'Start Date', type: 'date', required: true },
+                { name: 'end_date', label: 'End Date', type: 'date' }
+            ],
+
+            featured: [
+                { name: 'title', label: 'Feature Title', type: 'text', required: true },
+                { name: 'description', label: 'Description', type: 'textarea' },
+                { name: 'content_type', label: 'Content Type', type: 'select', required: true,
+                  options: [
+                    { value: 'playlist', label: 'Playlist' },
+                    { value: 'album', label: 'Album' },
+                    { value: 'artist', label: 'Artist' },
+                    { value: 'podcast', label: 'Podcast' }
+                  ]},
+                { name: 'content_id', label: 'Content', type: 'select', required: true,
+                  dependsOn: 'content_type',
+                  optionsLoader: (type) => this.loadContentOptions(type) },
+                { name: 'position', label: 'Display Position', type: 'number' },
+                { name: 'start_date', label: 'Start Date', type: 'datetime-local' },
+                { name: 'end_date', label: 'End Date', type: 'datetime-local' }
+            ],
+
+            ad: [
+                { name: 'title', label: 'Ad Title', type: 'text', required: true },
+                { name: 'advertiser', label: 'Advertiser', type: 'text', required: true },
+                { name: 'description', label: 'Description', type: 'textarea' },
+                { name: 'audio', label: 'Audio File', type: 'file', accept: 'audio/*', required: true },
+                { name: 'target_audience', label: 'Target Audience', type: 'tags' },
+                { name: 'regions', label: 'Target Regions', type: 'tags' },
+                { name: 'start_date', label: 'Start Date', type: 'datetime-local' },
+                { name: 'end_date', label: 'End Date', type: 'datetime-local' },
+                { name: 'frequency', label: 'Frequency per Hour', type: 'number', min: 1, max: 12 },
+                { name: 'daily_budget', label: 'Daily Budget', type: 'number', step: '0.01' },
+                { name: 'total_budget', label: 'Total Budget', type: 'number', step: '0.01' },
+                { name: 'status', label: 'Status', type: 'select', required: true,
+                  options: [
+                    { value: 'active', label: 'Active' },
+                    { value: 'paused', label: 'Paused' },
+                    { value: 'draft', label: 'Draft' }
+                  ]}
             ]
         };
         return fields[type] || [];

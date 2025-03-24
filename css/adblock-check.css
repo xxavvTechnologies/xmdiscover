@@ -1,0 +1,16 @@
+.adsbox {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    height: 1px !important;
+    width: 1px !important;
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Basic anti-measure classes */
+.sponsor-item:not(.blocked),
+.ad-wrapper:not(.hidden),
+.ad-content:not(.disabled) {
+    display: block !important;
+}

@@ -221,49 +221,90 @@ class DiscoverUI {
     }
 
     async loadCharts() {
+        // Get Top 100 first
+        const { data: top100 } = await supabase
+            .from('charts')
+            .select(`
+                *,
+                chart_entries (
+                    position,
+                    songs (
+                        id, title, cover_url,
+                        artists (name)
+                    )
+                )
+            `)
+            .eq('name', 'Top 100')
+            .single();
+
+        // Then get other charts
         const { data: charts } = await supabase
             .from('playlists')
             .select(`
                 *,
-                playlist_songs!inner (
-                    songs!inner (
-                        id,
-                        title,
-                        cover_url,
-                        artists!inner (name)
+                playlist_songs (
+                    songs (
+                        id, title, cover_url,
+                        artists (name)
                     )
                 )
             `)
             .eq('status', 'published')
             .eq('is_chart', true)
-            .limit(5);
+            .limit(4);
 
         const container = document.querySelector('[data-content="charts"]');
-        if (container && charts?.length) {
-            container.innerHTML = charts.map(chart => `
-                <div class="chart-card" onclick="window.location.href='${getPagePath('/pages/chart')}?id=${chart.id}'">
-                    <div class="chart-content">
-                        <div class="chart-info">
-                            <h3>${chart.name}</h3>
-                            <p>${chart.description}</p>
-                        </div>
-                        <div class="chart-preview">
-                            <div class="chart-tracks">
-                                ${chart.preview_tracks.map((track, i) => `
-                                    <div class="chart-track">
-                                        <span class="rank">${i + 1}</span>
-                                        <img src="${track.cover_url}" alt="${track.title}">
-                                        <div class="track-info">
-                                            <h4>${track.title}</h4>
-                                            <p>${track.artist}</p>
+        if (container) {
+            container.innerHTML = `
+                ${top100 ? `
+                    <div class="chart-card large" onclick="window.location.href='${getPagePath('/pages/chart')}?id=${top100.id}'">
+                        <div class="chart-content">
+                            <div class="chart-info">
+                                <h3>${top100.name}</h3>
+                                <p>The hottest tracks right now</p>
+                            </div>
+                            <div class="chart-preview">
+                                <div class="chart-tracks">
+                                    ${top100.chart_entries?.slice(0, 3).map((entry, i) => `
+                                        <div class="chart-track">
+                                            <span class="rank">${entry.position}</span>
+                                            <img src="${entry.songs.cover_url}" alt="${entry.songs.title}">
+                                            <div class="track-info">
+                                                <h4>${entry.songs.title}</h4>
+                                                <p>${entry.songs.artists.name}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                `).join('')}
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                ` : ''}
+                ${charts?.map(chart => `
+                    <div class="chart-card" onclick="window.location.href='${getPagePath('/pages/chart')}?id=${chart.id}'">
+                        <div class="chart-content">
+                            <div class="chart-info">
+                                <h3>${chart.name}</h3>
+                                <p>${chart.description}</p>
+                            </div>
+                            <div class="chart-preview">
+                                <div class="chart-tracks">
+                                    ${chart.preview_tracks.map((track, i) => `
+                                        <div class="chart-track">
+                                            <span class="rank">${i + 1}</span>
+                                            <img src="${track.cover_url}" alt="${track.title}">
+                                            <div class="track-info">
+                                                <h4>${track.title}</h4>
+                                                <p>${track.artist}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
         }
     }
 }

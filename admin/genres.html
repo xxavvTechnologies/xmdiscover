@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Playlists - xM DiScover Admin</title>
+    <title>Manage Genres - xM DiScover Admin</title>
     <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/admin.css">
@@ -48,50 +48,19 @@
             <div class="admin-nav-right">
                 <span class="admin-user" data-admin-user>Admin User</span>
                 <button class="admin-btn" data-action="logout">Logout</button>
-                <a href="../index.html" class="admin-btn">Return to Site</a>
             </div>
         </div>
     </div>
 
     <main class="admin-main">
         <header class="admin-header">
-            <h1>Manage Playlists</h1>
-            <button class="admin-btn" data-action="create" data-type="playlist">
-                Create Playlist
+            <h1>Manage Genres</h1>
+            <button class="admin-btn" data-action="create" data-type="genre">
+                Create Genre
             </button>
-            <div class="admin-header-actions">
-                <span class="admin-user" data-admin-user>Admin User</span>
-                <button class="admin-btn" data-action="logout">Logout</button>
-            </div>
         </header>
 
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Songs</th>
-                    <th>Creator</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Top Hits 2024</td>
-                    <td>50</td>
-                    <td>System</td>
-                    <td>Published</td>
-                    <td class="admin-actions">
-                        <button class="admin-btn" data-action="edit" data-id="1">Edit</button>
-                        <button class="admin-btn" data-action="delete" data-id="1">Delete</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="admin-grid"></div>
     </main>
-    <script type="module">
-        import { notifications } from '../js/services/notifications.js';
-        notifications.init();
-    </script>
 </body>
 </html>

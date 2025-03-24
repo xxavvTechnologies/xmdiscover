@@ -1,9 +1,27 @@
 import { supabase } from '../supabase.js';
 
 export class AdService {
-    static async playAdBreak() {
+    // Add default test ad
+    static defaultAd = {
+        id: 'test-ad',
+        title: 'Get DiScover Premier',
+        advertiser: 'xM DiScover',
+        audio_url: 'https://d2zcpib8duehag.cloudfront.net/ads/test-ad.mp3',
+        status: 'active',
+        play_count: 0,
+        click_count: 0
+    };
+
+    static async playAdBreak(minDuration = 15000, maxDuration = 30000) {
         try {
-            // Get 3-5 random active ads
+            // Check if ads are being blocked
+            const player = window.xmPlayer;
+            if (player?.adblockDetected) {
+                await this.handleBlockedAds();
+                return false;
+            }
+
+            // Get active ads with better error handling
             const { data: ads, error } = await supabase
                 .from('ads')
                 .select('*')
@@ -11,11 +29,15 @@ export class AdService {
                 .order('play_count', { ascending: true })
                 .limit(5);
 
-            if (error) throw error;
-            if (!ads?.length) {
-                console.warn('No ads available');
-                return true;
+            if (error) {
+                console.error('Failed to fetch ads:', error);
+                return this.handleNoAds(minDuration);
             }
+
+            // Use fallback ad if no ads available
+            let activeAds = ads?.length ? ads : [this.defaultAd];
+            
+            console.log(`Found ${activeAds.length} active ads`);
 
             // Create ad container
             const adContainer = document.createElement('div');
@@ -34,26 +56,102 @@ export class AdService {
             `;
             document.body.appendChild(adContainer);
 
-            // Play ads sequentially
-            let adCount = Math.min(4, ads.length); // Play 4 ads max
-            for (let i = 0; i < adCount; i++) {
-                await this.playAd(ads[i], adContainer);
+            // Add random delay to avoid automated detection
+            const randomDelay = Math.floor(Math.random() * 500) + 100;
+            await new Promise(resolve => setTimeout(resolve, randomDelay));
 
-                // Update play count after each ad
-                await supabase
-                    .from('ads')
-                    .update({ play_count: ads[i].play_count + 1 })
-                    .eq('id', ads[i].id);
+            let totalDuration = 0;
+            let playedCount = 0;
+            const startTime = Date.now();
+
+            // Play ads until we hit minimum duration
+            for (let i = 0; i < activeAds.length; i++) {
+                if (totalDuration >= maxDuration) break;
+                
+                try {
+                    const adStart = Date.now();
+                    await this.playAd(activeAds[i], adContainer);
+                    const adDuration = Date.now() - adStart;
+                    totalDuration += adDuration;
+                    playedCount++;
+
+                    if (totalDuration >= minDuration) {
+                        // If we've hit minimum duration, optionally play one more ad
+                        // unless it would exceed max duration
+                        if (i < activeAds.length - 1) {
+                            const nextAdEstDuration = 15000; // Assume 15s for next ad
+                            if (totalDuration + nextAdEstDuration > maxDuration) break;
+                        }
+                    }
+
+                    // Only update play count for real ads
+                    if (activeAds[i].id !== 'test-ad') {
+                        await supabase
+                            .from('ads')
+                            .update({ play_count: activeAds[i].play_count + 1 })
+                            .eq('id', activeAds[i].id);
+                    }
+                } catch (err) {
+                    console.error(`Failed to play ad ${i + 1}:`, err);
+                }
             }
 
             // Clean up
             adContainer.remove();
-            return true;
+            const totalTime = (Date.now() - startTime) / 1000;
+            console.log(`Ad break complete: ${playedCount} ads in ${totalTime.toFixed(1)}s`);
+            return playedCount > 0;
 
         } catch (error) {
             console.error('Ad break failed:', error);
+            return this.handleNoAds(minDuration);
+        }
+    }
+
+    static async handleNoAds(minDuration) {
+        console.warn('No ads available, using development ad');
+        try {
+            const adContainer = document.createElement('div');
+            adContainer.className = 'ad-overlay';
+            adContainer.innerHTML = `
+                <div class="ad-content">
+                    <div class="ad-info">
+                        <h3>Advertisement</h3>
+                        <p class="ad-title"></p>
+                        <p class="ad-advertiser"></p>
+                    </div>
+                    <div class="ad-progress">
+                        <div class="ad-progress-bar"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(adContainer);
+            await this.playAd(this.defaultAd, adContainer);
+            await new Promise(resolve => setTimeout(resolve, minDuration));
+            adContainer.remove();
+            return true;
+        } catch (err) {
+            console.error('Failed to play fallback ad:', err);
             return false;
         }
+    }
+
+    static async handleBlockedAds() {
+        // Show persistent warning about blocked ads
+        const warning = document.createElement('div');
+        warning.className = 'ad-block-warning';
+        warning.innerHTML = `
+            <div class="warning-content">
+                <h3>Ad Blocker Detected</h3>
+                <p>We rely on advertising to keep our service free. Please disable your ad blocker to continue.</p>
+            </div>
+        `;
+        document.body.appendChild(warning);
+
+        // Wait for a few seconds before removing
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        warning.remove();
+        return false;
     }
 
     static async playAd(ad, container) {

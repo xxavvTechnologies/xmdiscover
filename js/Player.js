@@ -20,6 +20,9 @@ export class Player {
         this.contextTarget = null;
         this.setupContextMenu();
         this.adManager = new AdManager();
+        this.pendingTrack = null; // Track to play after ads
+        this.pendingStartTime = 0; // Start time for pending track
+        this.DEFAULT_COVER = 'https://d2zcpib8duehag.cloudfront.net/xmdiscover-default-cover.png';
 
         // Initialize player elements
         this.elements = {
@@ -86,6 +89,41 @@ export class Player {
         PlayerStateManager.init();
         this.setupMediaSession();
         this.handleVisibilityChange();
+
+        // Check DRM and adblock status on init
+        this.checkProtectedContent();
+        this.setupAdblockDetection();
+    }
+
+    async checkProtectedContent() {
+        if (window.isSecureContext && navigator.requestMediaKeySystemAccess) {
+            try {
+                await navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{
+                    initDataTypes: ['keyids'],
+                    audioCapabilities: [
+                        { contentType: 'audio/mp4; codecs="mp4a.40.2"' }
+                    ]
+                }]);
+            } catch (error) {
+                notifications.show('Please enable protected content playback in your browser settings to ensure uninterrupted listening.', 'warning', 8000);
+            }
+        }
+    }
+
+    setupAdblockDetection() {
+        // Monitor ad service availability
+        const testAd = document.createElement('div');
+        testAd.innerHTML = '&nbsp;';
+        testAd.className = 'adsbox';
+        document.body.appendChild(testAd);
+
+        window.setTimeout(() => {
+            if (testAd.offsetHeight === 0) {
+                notifications.show('Please disable your ad blocker to support our service and artists.', 'warning', 0);
+                this.adblockDetected = true;
+            }
+            testAd.remove();
+        }, 100);
     }
 
     setupEventListeners() {
@@ -242,57 +280,111 @@ export class Player {
 
     async playTrack(trackInfo, startTime = 0) {
         try {
-            if (this.loading) return;
+            if (this.loading) {
+                console.log('[Player] Already loading, skipping');
+                return;
+            }
             
-            // Check for ads before playing new track
-            const playedAds = await this.adManager.checkForAds(
-                this.currentTrack ? 'interval' : 'force'
-            );
+            // Store track info before checking ads
+            const standardTrack = PlayerStateManager.standardizeTrackInfo(trackInfo);
+            console.log('[Player] Starting playback for:', standardTrack.title);
             
+            // Handle podcast episodes differently
+            if (standardTrack.type === 'podcast') {
+                console.log('[Player] Handling podcast episode');
+                const episodeData = await QueueService.fetchPodcastEpisode(standardTrack.id);
+                if (episodeData?.audioUrl) {
+                    standardTrack.audioUrl = episodeData.audioUrl;
+                    standardTrack.coverUrl = episodeData.coverUrl || this.DEFAULT_COVER;
+                }
+            }
+            // If no audio URL but we have track ID for regular tracks
+            else if (!standardTrack.audioUrl && standardTrack.id) {
+                console.log('[Player] No audio URL provided, fetching from database');
+                const trackData = await QueueService.fetchTrackData(standardTrack.id);
+                if (trackData?.audioUrl) {
+                    standardTrack.audioUrl = trackData.audioUrl;
+                    standardTrack.coverUrl = trackData.coverUrl || this.DEFAULT_COVER;
+                }
+            }
+            
+            // Final URL validation
+            if (!standardTrack.audioUrl) {
+                throw new Error('Track has no audio URL and could not be fetched');
+            }
+
+            // Ensure we have a valid cover URL
+            standardTrack.coverUrl = standardTrack.coverUrl || this.DEFAULT_COVER;
+
+            // Check if we need to play ads before track
+            if (this.adManager.shouldPlayAdsBeforeTrack()) {
+                const playedAds = await this.adManager.checkForAds('force');
+                if (playedAds) {
+                    console.log('[Player] Ads played, storing track as pending');
+                    this.pendingTrack = standardTrack;
+                    this.pendingStartTime = startTime;
+                    return;
+                }
+            }
+
+            // Continue with normal playback
             this.loading = true;
             document.body.classList.add('loading-track');
 
-            // Standardize track info
-            const standardTrack = PlayerStateManager.standardizeTrackInfo(trackInfo);
-            const signedAudioUrl = await QueueService.getSignedUrl(standardTrack.audioUrl);
+            console.log('[Player] Processing audio URL:', standardTrack.audioUrl);
+            const audioUrl = await QueueService.getSignedUrl(standardTrack.audioUrl, standardTrack.type || 'song');
             
-            if (!signedAudioUrl) {
+            if (!audioUrl) {
                 throw new Error('Could not access audio file');
             }
 
+            console.log('[Player] Starting audio playback with URL:', audioUrl);
             this.currentTrack = {
                 ...standardTrack,
-                audioUrl: signedAudioUrl
+                audioUrl
             };
 
             try {
-                this.audioElement.src = signedAudioUrl;
+                this.audioElement.src = audioUrl;
                 this.audioElement.currentTime = startTime;
                 await this.audioElement.play();
                 this.updatePlayerUI();
 
-                // Update media session
+                // Update media session metadata with validation
                 if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: standardTrack.title,
-                        artist: standardTrack.artist,
-                        artwork: [
-                            { src: standardTrack.coverUrl, sizes: '512x512', type: 'image/jpeg' }
-                        ]
-                    });
+                    try {
+                        const metadata = {
+                            title: standardTrack.title || 'Unknown Title',
+                            artist: standardTrack.artist || 'Unknown Artist',
+                            artwork: []
+                        };
+
+                        // Only add artwork if we have a valid URL
+                        if (standardTrack.coverUrl) {
+                            metadata.artwork = [
+                                { src: standardTrack.coverUrl, sizes: '512x512', type: 'image/jpeg' }
+                            ];
+                        }
+
+                        navigator.mediaSession.metadata = new MediaMetadata(metadata);
+                    } catch (metadataError) {
+                        console.warn('[Player] MediaMetadata error:', metadataError);
+                        // Don't throw - continue playback even if metadata fails
+                    }
                 }
 
-                // Update state manager
                 PlayerStateManager.updateState(this.currentTrack, this.queue);
+                console.log('[Player] Playback started successfully');
 
             } catch (err) {
-                console.error('Playback error:', err);
+                console.error('[Player] Playback error:', err);
                 throw new Error('Could not play audio file');
             }
 
             this.updateQueueUI();
 
         } catch (error) {
+            console.error('[Player] Error:', error);
             this.handlePlaybackError(error);
         } finally {
             this.loading = false;
@@ -360,6 +452,61 @@ export class Player {
          this.elements.smartQueueButton].forEach(btn => {
             if (btn) btn.style.opacity = isAdBreak ? '0.5' : '1';
         });
+
+        // Show bookmark instead of heart for podcasts
+        const likeBtn = document.querySelector('.xm-btn.like');
+        if (likeBtn) {
+            if (this.currentTrack?.type === 'podcast') {
+                likeBtn.innerHTML = '<i class="ri-bookmark-line"></i>';
+                likeBtn.setAttribute('aria-label', 'Save for Later');
+                // Handle podcast save action
+                likeBtn.onclick = () => this.savePodcastEpisode();
+            } else {
+                likeBtn.innerHTML = '<i class="ri-heart-3-line"></i>';
+                likeBtn.setAttribute('aria-label', 'Like');
+                // Restore original like functionality
+                likeBtn.onclick = () => this.likeTrack();
+            }
+        }
+    }
+
+    async savePodcastEpisode() {
+        if (!this.currentTrack?.id) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            notifications.show('Please log in to save episodes', 'error');
+            return;
+        }
+
+        const likeBtn = document.querySelector('.xm-btn.like');
+        const isSaved = likeBtn.querySelector('i').classList.contains('ri-bookmark-fill');
+
+        try {
+            if (isSaved) {
+                await supabase
+                    .from('saved_episodes')
+                    .delete()
+                    .eq('user_id', session.user.id)
+                    .eq('episode_id', this.currentTrack.id);
+                    
+                likeBtn.innerHTML = '<i class="ri-bookmark-line"></i>';
+                notifications.show('Episode removed from saved', 'success');
+            } else {
+                await supabase
+                    .from('saved_episodes')
+                    .insert([{ 
+                        user_id: session.user.id, 
+                        episode_id: this.currentTrack.id 
+                    }]);
+                    
+                likeBtn.innerHTML = '<i class="ri-bookmark-fill"></i>';
+                notifications.show('Episode saved for later', 'success');
+            }
+        } catch (error) {
+            console.error('Failed to save/remove episode:', error);
+            notifications.show('Failed to update saved episodes', 'error');
+        }
     }
 
     togglePlay() {
@@ -381,10 +528,17 @@ export class Player {
     async next() {
         if (this.adManager.adBreakInProgress) return;
         if (this.queue.length > 0) {
-            // Check for ads if user is skipping tracks
-            await this.adManager.checkForAds('skip');
-            
             const nextTrack = this.queue.shift();
+            // Store track info before checking ads
+            const playedAds = await this.adManager.checkForAds('skip');
+            
+            if (playedAds) {
+                this.pendingTrack = nextTrack;
+                this.pendingStartTime = 0;
+                this.updateQueueUI();
+                return;
+            }
+            
             await this.playTrack(nextTrack);
             this.updateQueueUI();
         }
@@ -570,11 +724,30 @@ export class Player {
             return;
         }
 
-        // Check for ads before playing next track
-        await this.adManager.checkForAds('interval');
+        // If we have a pending track from ads, play it first
+        if (this.pendingTrack) {
+            const track = this.pendingTrack;
+            const startTime = this.pendingStartTime;
+            this.pendingTrack = null;
+            this.pendingStartTime = 0;
+            await this.playTrack(track, startTime);
+            return;
+        }
 
+        // Normal queue handling - try next track
         if (this.queue.length > 0) {
-            const nextTrack = this.queue.shift();
+            const nextTrack = this.queue[0]; // Don't shift yet
+            const playedAds = await this.adManager.checkForAds('interval');
+
+            if (playedAds) {
+                // Store next track as pending but don't remove from queue yet
+                this.pendingTrack = nextTrack;
+                this.pendingStartTime = 0;
+                return;
+            }
+
+            // No ads played, proceed with next track
+            this.queue.shift();
             await this.playTrack(nextTrack);
             this.updateQueueUI();
         }

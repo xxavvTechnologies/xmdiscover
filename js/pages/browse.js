@@ -127,22 +127,37 @@ class BrowsePage {
     }
 
     async loadCharts(container) {
-        const { data } = await supabase
+        // First get the Top 100 chart
+        const { data: top100 } = await supabase
+            .from('charts')
+            .select(`
+                *,
+                chart_entries (
+                    songs (
+                        id, title, cover_url,
+                        artists (name)
+                    )
+                )
+            `)
+            .eq('name', 'Top 100')
+            .single();
+
+        // Then get other charts
+        const { data: charts } = await supabase
             .from('playlists')
             .select(`
                 *,
-                playlist_songs!inner(
-                    songs!inner(
+                playlist_songs (
+                    songs (
                         id, title, cover_url,
-                        artists!inner(name)
+                        artists (name)
                     )
                 )
             `)
             .eq('status', 'published')
-            .eq('is_chart', true)
-            .order(this.getSortColumn(), { ascending: this.sortSelect.value === 'name' });
+            .eq('is_chart', true);
 
-        this.renderCharts(container, data);
+        this.renderCharts(container, { top100, charts });
     }
 
     // Render methods for each content type
@@ -237,9 +252,33 @@ class BrowsePage {
         `;
     }
 
-    renderCharts(container, charts) {
+    renderCharts(container, { top100, charts }) {
         container.innerHTML = `
             <div class="chart-grid">
+                ${top100 ? `
+                    <div class="chart-card" onclick="window.location.href='${getPagePath('/pages/chart')}?id=${top100.id}'">
+                        <div class="chart-content">
+                            <div class="chart-info">
+                                <h3>${top100.name}</h3>
+                                <p>The hottest tracks right now</p>
+                            </div>
+                            <div class="chart-preview">
+                                <div class="chart-tracks">
+                                    ${top100.chart_entries?.slice(0, 3).map((entry, i) => `
+                                        <div class="chart-track">
+                                            <span class="rank">${i + 1}</span>
+                                            <img src="${entry.songs.cover_url}" alt="${entry.songs.title}">
+                                            <div class="track-info">
+                                                <h4>${entry.songs.title}</h4>
+                                                <p>${entry.songs.artists.name}</p>
+                                            </div>
+                                        </div>
+                                    `).join('') || ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 ${charts?.map(chart => `
                     <div class="chart-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${chart.id}'">
                         <div class="chart-content">

@@ -224,28 +224,61 @@ class LibraryUI {
     }
 
     async loadFollowedPodcasts(userId) {
-        const { data: follows } = await supabase
-            .from('podcast_follows')
-            .select(`
-                podcast:podcast_id (
-                    id,
-                    title,
-                    description,
-                    image_url,
-                    podcast_episodes(count)
-                )
-            `)
-            .eq('user_id', userId);
+        try {
+            const { data: follows } = await supabase
+                .from('podcast_follows')
+                .select(`
+                    podcast:podcast_id (
+                        id,
+                        title,
+                        description,
+                        image_url,
+                        podcast_episodes(count)
+                    )
+                )`)
+                .eq('user_id', userId);
 
-        const container = document.querySelector('[data-content="podcasts"]');
-        if (container) {
-            container.innerHTML = follows?.map(({ podcast }) => `
-                <div class="podcast-card" onclick="window.location.href='${getPagePath('/pages/podcast')}?id=${podcast.id}'">
-                    <div class="podcast-img" style="background-image: url('${podcast.image_url}')"></div>
-                    <h3>${podcast.title}</h3>
-                    <p>${podcast.podcast_episodes[0]?.count || 0} episodes</p>
-                </div>
-            `).join('') || '<p>No followed podcasts</p>';
+            // Get saved episodes
+            const { data: savedEpisodes } = await supabase
+                .from('saved_episodes')
+                .select(`
+                    episode:episode_id (
+                        id,
+                        title,
+                        duration,
+                        audio_url,
+                        published_at,
+                        podcasts (
+                            id,
+                            title,
+                            image_url
+                        )
+                    )
+                `)
+                .eq('user_id', userId)
+                .order('saved_at', { ascending: false });
+
+            // Update quick access card
+            const podcastCard = document.querySelector('[data-type="podcasts"]');
+            if (podcastCard) {
+                const followCount = follows?.length || 0;
+                const savedCount = savedEpisodes?.length || 0;
+                const img = podcastCard.querySelector('.playlist-img');
+                img.style.backgroundImage = `url('https://juywatmqwykgdjfqexho.supabase.co/storage/v1/object/public/images/system/podcast-banner.png')`;
+                
+                const countText = [];
+                if (followCount) countText.push(`${followCount} following`);
+                if (savedCount) countText.push(`${savedCount} saved`);
+                
+                podcastCard.querySelector('.podcast-count').textContent = 
+                    countText.length ? countText.join(' • ') : 'No saved content';
+            }
+        } catch (error) {
+            console.error('Failed to load podcast content:', error);
+            const podcastCard = document.querySelector('[data-type="podcasts"]');
+            if (podcastCard) {
+                podcastCard.querySelector('.podcast-count').textContent = 'Failed to load';
+            }
         }
     }
 

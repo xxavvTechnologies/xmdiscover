@@ -62,13 +62,14 @@ class SearchPage {
 
     async performSearch(query) {
         try {
-            const [artists, songs, albums, playlists, users, podcasts] = await Promise.all([
+            const [artists, songs, albums, playlists, users, podcasts, charts] = await Promise.all([
                 this.searchArtists(query),
                 this.searchSongs(query),
                 this.searchAlbums(query),
                 this.searchPlaylists(query),
                 this.searchUsers(query),
-                this.searchPodcasts(query)
+                this.searchPodcasts(query),
+                this.searchCharts(query)
             ]);
 
             // Clear previous results
@@ -76,7 +77,7 @@ class SearchPage {
 
             // Determine top result
             const topResult = this.determineTopResult({
-                artists, songs, albums, playlists, users, podcasts
+                artists, songs, albums, playlists, users, podcasts, charts
             }, query);
 
             if (topResult && (this.activeFilter === 'all' || this.activeFilter === topResult.type)) {
@@ -101,6 +102,9 @@ class SearchPage {
             }
             if (this.activeFilter === 'all' || this.activeFilter === 'podcasts') {
                 this.displayPodcasts(podcasts);
+            }
+            if (this.activeFilter === 'all' || this.activeFilter === 'charts') {
+                this.displayChartResults(charts);
             }
 
         } catch (error) {
@@ -205,6 +209,35 @@ class SearchPage {
         return data || [];
     }
 
+    async searchCharts(query) {
+        // Always include Top 100 if search is empty or matches
+        const { data: top100 } = await supabase
+            .from('charts')
+            .select('*')
+            .eq('name', 'Top 100')
+            .single();
+
+        const { data: charts } = await supabase
+            .from('playlists')
+            .select('*')
+            .eq('is_chart', true)
+            .ilike('name', `%${query}%`);
+
+        const results = [];
+        if (top100 && (!query || top100.name.toLowerCase().includes(query.toLowerCase()))) {
+            results.push({
+                ...top100,
+                type: 'official_chart'
+            });
+        }
+        
+        if (charts) {
+            results.push(...charts);
+        }
+
+        return results;
+    }
+
     determineTopResult(results, query) {
         const allResults = [
             ...results.artists.map(item => ({ ...item, type: 'artists' })),
@@ -212,7 +245,8 @@ class SearchPage {
             ...results.albums.map(item => ({ ...item, type: 'albums' })),
             ...results.playlists.map(item => ({ ...item, type: 'playlists' })),
             ...results.users.map(item => ({ ...item, type: 'users' })),
-            ...results.podcasts.map(item => ({ ...item, type: 'podcasts' }))
+            ...results.podcasts.map(item => ({ ...item, type: 'podcasts' })),
+            ...results.charts.map(item => ({ ...item, type: 'charts' }))
         ];
 
         if (allResults.length === 0) return null;
@@ -417,6 +451,28 @@ class SearchPage {
         `).join('');
         
         section.style.display = 'block';
+    }
+
+    displayChartResults(charts) {
+        const container = document.querySelector('.charts-section');
+        if (!container) return;
+
+        container.innerHTML = `
+            <h2>Charts</h2>
+            <div class="chart-grid">
+                ${charts.map(chart => `
+                    <div class="chart-card" onclick="window.location.href='${
+                        chart.type === 'official_chart' ? 
+                        getPagePath('/pages/chart') : 
+                        getPagePath('/pages/playlist')
+                    }?id=${chart.id}'">
+                        <div class="chart-img" style="background-image: url('${chart.cover_url}')"></div>
+                        <h3>${chart.name}</h3>
+                        <p>${chart.description || ''}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
     clearResults() {

@@ -38,6 +38,14 @@ class PodcastPage {
 
             const container = document.querySelector('.episode-list');
             if (container && episodes?.length) {
+                // Get saved episodes for current user
+                const { data: savedEpisodes } = await supabase
+                    .from('saved_episodes')
+                    .select('episode_id')
+                    .eq('user_id', (await supabase.auth.getSession()).data.session?.user?.id);
+
+                const savedEpisodeIds = new Set(savedEpisodes?.map(e => e.episode_id) || []);
+
                 container.innerHTML = episodes.map((episode, index) => {
                     // Format date
                     const publishDate = new Date(episode.published_at);
@@ -73,12 +81,37 @@ class PodcastPage {
                                     ${index === 0 ? '<span class="latest-badge">Latest</span>' : ''}
                                 </div>
                             </div>
-                            <button class="play-episode" title="Play Episode">
-                                <i class="ri-play-fill"></i>
-                            </button>
+                            <div class="episode-actions">
+                                <button class="save-episode ${savedEpisodeIds.has(episode.id) ? 'saved' : ''}" 
+                                        title="Save for Later">
+                                    <i class="ri-bookmark-${savedEpisodeIds.has(episode.id) ? 'fill' : 'line'}"></i>
+                                </button>
+                                <button class="play-episode" title="Play Episode">
+                                    <i class="ri-play-fill"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
+
+                // Add save button handlers
+                container.querySelectorAll('.save-episode').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const episodeId = btn.closest('.episode-item').dataset.episodeId;
+                        const isSaved = btn.classList.contains('saved');
+                        
+                        if (isSaved) {
+                            await this.removeFromSaved(episodeId);
+                            btn.classList.remove('saved');
+                            btn.innerHTML = '<i class="ri-bookmark-line"></i>';
+                        } else {
+                            await this.saveForLater(episodeId);
+                            btn.classList.add('saved');
+                            btn.innerHTML = '<i class="ri-bookmark-fill"></i>';
+                        }
+                    });
+                });
 
                 // Add click handlers for descriptions
                 container.querySelectorAll('.show-description').forEach(btn => {
@@ -116,6 +149,42 @@ class PodcastPage {
             console.error('Failed to load podcast:', error);
             alert('Podcast not found');
             window.location.href = getPagePath('/discover');
+        }
+    }
+
+    async saveForLater(episodeId) {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('saved_episodes')
+                .insert([{ user_id: session.user.id, episode_id: episodeId }]);
+
+            if (error) throw error;
+            notifications.show('Episode saved for later', 'success');
+        } catch (error) {
+            console.error('Failed to save episode:', error);
+            notifications.show('Failed to save episode', 'error');
+        }
+    }
+
+    async removeFromSaved(episodeId) {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('saved_episodes')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('episode_id', episodeId);
+
+            if (error) throw error;
+            notifications.show('Episode removed from saved', 'success');
+        } catch (error) {
+            console.error('Failed to remove episode:', error);
+            notifications.show('Failed to remove episode', 'error');
         }
     }
 

@@ -10,6 +10,50 @@ function normalizePath(path) {
     return path.replace(/^\//, '').replace(/\.html$/, '');
 }
 
+// Add file size formatter
+export function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Add WAV file duration calculator
+export function getWavDuration(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.decodeAudioData(e.target.result, (buffer) => {
+                const duration = buffer.duration;
+                resolve(duration);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Add better file validation
+export function validateAudioFile(file) {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('audio/')) {
+            reject(new Error('Invalid file type. Please upload an audio file.'));
+            return;
+        }
+
+        if (file.size > 41943040) {
+            reject(new Error('File size exceeds 40MB limit.'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => resolve(true);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsArrayBuffer(file.slice(0, 4096)); // Read first 4KB to verify file
+    });
+}
+
 async function handleAuth() {
     try {
         const { data: { session } } = await supabase.auth.getSession();

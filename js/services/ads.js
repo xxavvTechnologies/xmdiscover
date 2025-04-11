@@ -26,6 +26,7 @@ export class AdService {
                 .from('ads')
                 .select('*')
                 .eq('status', 'active')
+                .lte('daily_budget', supabase.sql`COALESCE((SELECT SUM(daily_budget) FROM ads WHERE status = 'active'), 0)`)
                 .order('play_count', { ascending: true })
                 .limit(5);
 
@@ -38,6 +39,13 @@ export class AdService {
             let activeAds = ads?.length ? ads : [this.defaultAd];
             
             console.log(`Found ${activeAds.length} active ads`);
+
+            // Filter ads by region and budget
+            activeAds = activeAds.filter(ad => {
+                const withinBudget = !ad.daily_budget || ad.impressions * ad.daily_budget < ad.total_budget;
+                const validRegion = !ad.regions?.length || this.isValidRegion(ad.regions);
+                return withinBudget && validRegion;
+            });
 
             // Create ad container
             const adContainer = document.createElement('div');
@@ -108,6 +116,12 @@ export class AdService {
         }
     }
 
+    static isValidRegion(adRegions) {
+        // Get user's region from browser or saved preference
+        const userRegion = localStorage.getItem('user_region') || 'global';
+        return adRegions.includes('global') || adRegions.includes(userRegion);
+    }
+
     static async handleNoAds(minDuration) {
         console.warn('No ads available, using development ad');
         try {
@@ -155,8 +169,22 @@ export class AdService {
     }
 
     static async playAd(ad, container) {
-        return new Promise((resolve) => {
-            const audio = new Audio(ad.audio_url);
+        return new Promise(async (resolve) => {
+            // Get fresh signed URL for ad audio
+            let audioUrl = ad.audio_url;
+            if (audioUrl.includes('supabase.co/storage/v1/object/sign/ads')) {
+                const pathMatch = audioUrl.match(/\/ads\/(.+?)\?/);
+                if (pathMatch) {
+                    const { data } = await supabase.storage
+                        .from('ads')
+                        .createSignedUrl(pathMatch[1], 300); // 5 min expiry
+                    if (data?.signedUrl) {
+                        audioUrl = data.signedUrl;
+                    }
+                }
+            }
+
+            const audio = new Audio(audioUrl);
             
             // Prevent seeking
             audio.addEventListener('seeking', () => {
@@ -210,6 +238,16 @@ export class AdService {
 
             // Start playback
             audio.play();
+
+            // Update impression count
+            if (ad.id !== 'test-ad') {
+                await supabase
+                    .from('ads')
+                    .update({ 
+                        impressions: (ad.impressions || 0) + 1
+                    })
+                    .eq('id', ad.id);
+            }
         });
     }
 }

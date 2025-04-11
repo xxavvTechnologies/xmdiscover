@@ -144,19 +144,30 @@ class HomeUI {
 
     async loadMoodMixes() {
         const { data: moods } = await supabase
-            .from('playlists')
-            .select('*')
-            .eq('status', 'published')
-            .eq('is_mood_playlist', true)
+            .from('moods')
+            .select(`
+                *,
+                mood_songs (
+                    songs (
+                        id, title,
+                        artists (name)
+                    )
+                )
+            `)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
             .limit(6);
 
         const container = document.querySelector('[data-content="moods"]');
         if (container && moods?.length) {
             container.innerHTML = moods.map(mood => `
-                <div class="mood-card" onclick="window.location.href='${getPagePath('/pages/playlist')}?id=${mood.id}'">
-                    <div class="mood-img" style="background-image: url('${mood.cover_url}')"></div>
+                <div class="mood-card" onclick="window.location.href='${getPagePath('/pages/mood')}?id=${mood.id}'">
+                    <div class="mood-img" style="background-color: ${mood.color || '#8c52ff'}">
+                        <img src="${mood.cover_url || ''}" alt="${mood.name}">
+                    </div>
                     <h3>${mood.name}</h3>
                     <p>${mood.description || ''}</p>
+                    <span class="song-count">${mood.mood_songs?.length || 0} songs</span>
                 </div>
             `).join('');
         }

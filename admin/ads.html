@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Ads - xM DiScover Admin</title>
+    <link rel="icon" type="image/png" href="https://d2zcpib8duehag.cloudfront.net/xmdiscover-badge.png">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-header-nav">
+        <div class="admin-nav-container">
+            <div class="admin-nav-left">
+                <div class="admin-logo">xM DiScover</div>
+<a href="index.html">Dashboard</a>
+
+<div class="admin-nav-group">
+    <span class="nav-label">Content</span>
+    <div class="admin-nav-dropdown">
+        <a href="playlists.html">Playlists</a>
+        <a href="albums.html">Albums</a>
+        <a href="songs.html">Songs</a>
+        <a href="artists.html">Artists</a>
+        <a href="podcasts.html">Podcasts</a>
+    </div>
+</div>
+
+<div class="admin-nav-group">
+    <span class="nav-label">Curation</span>
+    <div class="admin-nav-dropdown">
+        <a href="moods.html">Moods</a>
+        <a href="genres.html">Genres</a>
+        <a href="charts.html">Charts</a>
+    </div>
+</div>
+
+<div class="admin-nav-group">
+    <span class="nav-label">Marketing</span>
+    <div class="admin-nav-dropdown">
+        <a href="featured.html">Featured</a>
+        <a href="ads.html">Ads</a>
+    </div>
+</div>
+            </div>
+            <div class="admin-nav-right">
+                <span class="admin-user" data-admin-user>Admin User</span>
+                <button class="admin-btn" data-action="logout">Logout</button>
+                <a href="../index.html" class="admin-btn">Return to Site</a>
+            </div>
+        </div>
+    </div>
+
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Manage Ads</h1>
+            <button class="admin-btn" data-action="create" data-type="ad">Create Ad</button>
+        </header>
+
+        <div class="admin-filters">
+            <select class="admin-select" data-filter="status">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="draft">Draft</option>
+                <option value="completed">Completed</option>
+            </select>
+            <select class="admin-select" data-filter="region">
+                <option value="">All Regions</option>
+                <option value="global">Global</option>
+                <option value="us">United States</option>
+                <option value="eu">Europe</option>
+                <option value="asia">Asia</option>
+            </select>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Advertiser</th>
+                        <th>Stats</th>
+                        <th>Budget</th>
+                        <th>Period</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

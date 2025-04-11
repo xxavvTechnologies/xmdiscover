@@ -40,6 +40,20 @@ export class NotificationService {
         }
     }
 
+    update(message, type = 'info') {
+        // Find existing notification with same type and update it
+        const existingNotification = this.container?.querySelector(`.notification-${type}`);
+        if (existingNotification) {
+            const messageEl = existingNotification.querySelector('p');
+            if (messageEl) {
+                messageEl.textContent = message;
+                return;
+            }
+        }
+        // If no existing notification found, show new one
+        this.show(message, type);
+    }
+
     async processQueue() {
         if (!this.container || this.isProcessing || this.queue.length === 0) return;
         

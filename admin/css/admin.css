@@ -366,9 +366,11 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Changed from center */
     justify-content: center;
     z-index: 1000;
+    padding: 2rem;
+    overflow-y: auto; /* Enable scrolling */
 }
 
 .admin-modal .admin-form {
@@ -378,6 +380,9 @@
     border: 1px solid rgba(140, 82, 255, 0.1);
     width: 100%;
     max-width: 500px;
+    max-height: 85vh; /* Limit height */
+    overflow-y: auto; /* Enable scrolling */
+    margin: auto; /* Center vertically when content is short */
 }
 
 .admin-modal h2 {
@@ -393,6 +398,8 @@
 
 .song-selector {
     margin-top: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .song-search {
@@ -436,6 +443,8 @@
 }
 
 .selected-songs {
+    max-height: 200px;
+    overflow-y: auto;
     margin-top: 1rem;
 }
 
@@ -631,4 +640,110 @@
     content: '▾';
     font-size: 0.8rem;
     opacity: 0.5;
+}
+
+/* Ad Management Styles */
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+}
+
+.status-badge.paused {
+    background: rgba(255, 171, 25, 0.2);
+    color: #ffab19;
+}
+
+.status-badge.draft {
+    background: rgba(140, 82, 255, 0.2);
+    color: #8c52ff;
+}
+
+.status-badge.completed {
+    background: rgba(99, 99, 99, 0.2);
+    color: #999;
+}
+
+.admin-filters {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.admin-select {
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    min-width: 150px;
+}
+
+.ad-title-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ad-title-cell i {
+    color: #8c52ff;
+    font-size: 0.9rem;
+}
+
+.ad-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.ad-budget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.ad-period {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(20, 0, 40, 0.95);
+    border: 1px solid rgba(140, 82, 255, 0.1);
+    border-radius: 6px;
+    min-height: 42px;
+}
+
+.tag {
+    background: rgba(140, 82, 255, 0.1);
+    color: #8c52ff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tag button {
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
 }

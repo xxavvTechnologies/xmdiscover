@@ -8,6 +8,11 @@ class AdminUI {
         this.isInitialized = false;
         this.supabase = supabase;
         this.init();
+
+        // Add event listener for popstate to handle browser navigation
+        window.addEventListener('popstate', () => {
+            this.loadPageData();
+        });
     }
 
     async init() {
@@ -17,7 +22,14 @@ class AdminUI {
             // Single auth check at startup
             const { data: { session } } = await this.supabase.auth.getSession();
             if (!session) {
-                window.location.href = '/auth/login.html';
+                window.location.href = '/auth/login';
+                return;
+            }
+
+            // Check if we're on an admin page
+            const isAdminPage = window.location.pathname.includes('/admin/');
+            if (!isAdminPage) {
+                window.location.href = '/admin/';
                 return;
             }
 
@@ -84,7 +96,8 @@ class AdminUI {
 
     async handleLogout() {
         await this.supabase.auth.signOut();
-        window.location.href = '/auth/login.html';
+        // Redirect to login page while preserving extension handling
+        window.location.href = '/auth/login';
     }
 
     async handleAction(e) {
@@ -131,14 +144,22 @@ class AdminUI {
     }
 
     getTypeFromPath(path) {
-        const page = path.split('/').pop().replace('.html', '');
+        // Remove .html extension if present
+        const cleanPath = path.replace(/\.html$/, '');
+        // Get the last segment of the path
+        const page = cleanPath.split('/').pop();
         // Convert plural to singular for proper API calls
         const typeMap = {
             'albums': 'album',
             'artists': 'artist',
             'songs': 'song',
             'playlists': 'playlist',
-            'podcasts': 'podcast'
+            'podcasts': 'podcast',
+            'genres': 'genre',
+            'moods': 'mood',
+            'charts': 'chart',
+            'featured': 'featured',
+            'ads': 'ad'
         };
         return typeMap[page] || page;
     }
@@ -232,6 +253,9 @@ class AdminUI {
                     break;
                 case 'charts.html':
                     await this.loadCharts();
+                    break;
+                case 'ads.html':
+                    await this.loadAds();
                     break;
             }
         } catch (error) {
@@ -397,19 +421,21 @@ class AdminUI {
     async loadMoods() {
         const { data: moods } = await this.supabase
             .from('moods')
-            .select('*');
+            .select('*, mood_songs(count)')
+            .order('name');
         
         const container = document.querySelector('.admin-grid');
         if (!container) return;
     
         container.innerHTML = moods?.map(mood => `
             <div class="admin-card">
-                <div class="card-image" style="background-color: ${mood.color}">
+                <div class="card-image" style="background-color: ${mood.color || '#8c52ff'}">
                     <img src="${mood.cover_url || ''}" alt="${mood.name}">
                 </div>
                 <div class="card-content">
                     <h3>${mood.name}</h3>
                     <p>${mood.description || ''}</p>
+                    <span class="count">${mood.mood_songs?.[0]?.count || 0} songs</span>
                 </div>
                 <div class="card-actions">
                     <button class="admin-btn" data-action="edit" data-id="${mood.id}">Edit</button>
@@ -422,7 +448,12 @@ class AdminUI {
     async loadCharts() {
         const { data: charts } = await this.supabase
             .from('charts')
-            .select('*, chart_entries(count)');
+            .select(`
+                *,
+                chart_entries(count),
+                chart_type:type(name)
+            `)
+            .order('updated_at', { ascending: false });
         
         const container = document.querySelector('.admin-grid');
         if (!container) return;
@@ -435,8 +466,8 @@ class AdminUI {
                 <div class="card-content">
                     <h3>${chart.name}</h3>
                     <p>${chart.description || ''}</p>
-                    <span class="badge">${chart.type}</span>
-                    <span class="count">${chart.chart_entries[0]?.count || 0} tracks</span>
+                    <span class="badge">${chart.chart_type?.name || chart.type}</span>
+                    <span class="count">${chart.chart_entries?.[0]?.count || 0} tracks</span>
                 </div>
                 <div class="card-actions">
                     <button class="admin-btn" data-action="edit" data-id="${chart.id}">Edit</button>
@@ -447,9 +478,9 @@ class AdminUI {
     }
 
     async loadGenres() {
-        const { data: genres } = await supabase
+        const { data: genres } = await this.supabase
             .from('genres')
-            .select('*')
+            .select('*, parent_genre:parent_id(name)')
             .order('name');
     
         const container = document.querySelector('.admin-grid');
@@ -463,7 +494,7 @@ class AdminUI {
                 <div class="card-content">
                     <h3>${genre.name}</h3>
                     <p>${genre.description || ''}</p>
-                    ${genre.parent_id ? '<span class="badge">Sub-genre</span>' : ''}
+                    ${genre.parent_genre ? `<span class="badge">Sub-genre of ${genre.parent_genre.name}</span>` : ''}
                 </div>
                 <div class="card-actions">
                     <button class="admin-btn" data-action="edit" data-id="${genre.id}">Edit</button>
@@ -473,8 +504,71 @@ class AdminUI {
         `).join('') || '<p>No genres found</p>';
     }
 
+    async loadAds() {
+        const { data: ads } = await this.supabase
+            .from('ads')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        const tbody = document.querySelector('.admin-table tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = ads?.map(ad => {
+            const stats = {
+                plays: ad.play_count || 0,
+                clicks: ad.click_count || 0,
+                ctr: ad.play_count ? ((ad.click_count / ad.play_count) * 100).toFixed(1) : '0.0',
+                impressions: ad.impressions || 0
+            };
+
+            const budget = {
+                daily: ad.daily_budget ? `$${ad.daily_budget}` : 'N/A',
+                total: ad.total_budget ? `$${ad.total_budget}` : 'N/A',
+            };
+
+            return `
+                <tr>
+                    <td>
+                        <div class="ad-title-cell">
+                            <span>${ad.title}</span>
+                            ${ad.click_url ? `<i class="ri-external-link-line"></i>` : ''}
+                        </div>
+                    </td>
+                    <td>${ad.advertiser}</td>
+                    <td>
+                        <div class="ad-stats">
+                            <span title="Plays">${stats.plays} plays</span>
+                            <span title="Clicks">${stats.clicks} clicks</span>
+                            <span title="Click-through rate">${stats.ctr}% CTR</span>
+                            <span title="Impressions">${stats.impressions} views</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="ad-budget">
+                            <span>Daily: ${budget.daily}</span>
+                            <span>Total: ${budget.total}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="ad-period">
+                            <span>Start: ${ad.start_date ? new Date(ad.start_date).toLocaleDateString() : 'N/A'}</span>
+                            <span>End: ${ad.end_date ? new Date(ad.end_date).toLocaleDateString() : 'Ongoing'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${ad.status}">${ad.status}</span>
+                    </td>
+                    <td class="admin-actions">
+                        <button class="admin-btn" data-action="edit" data-id="${ad.id}">Edit</button>
+                        <button class="admin-btn" data-action="delete" data-id="${ad.id}">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join('') || '<tr><td colspan="7">No ads found</td></tr>';
+    }
+
     async loadArtistOptions() {
-        const { data: artists } = await supabase
+        const { data: artists } = await this.supabase
             .from('artists')
             .select('id, name')
             .order('name');
@@ -482,6 +576,18 @@ class AdminUI {
         return artists?.map(artist => ({
             value: artist.id,
             label: artist.name
+        })) || [];
+    }
+
+    async loadGenreOptions() {
+        const { data: genres } = await this.supabase
+            .from('genres')
+            .select('id, name')
+            .order('name');
+        
+        return genres?.map(genre => ({
+            value: genre.id,
+            label: genre.name
         })) || [];
     }
 
@@ -511,13 +617,13 @@ class AdminUI {
                 ]}
             ],
             song: [
-                { name: 'title', label: 'Song Title', type: 'text', required: true },
+                { name: 'title', label: 'Song Title', type: 'text', required: true, maxLength: 100 },
                 { name: 'artist_id', label: 'Artist', type: 'select', required: true,
                   optionsLoader: () => this.loadArtistOptions() },
                 { name: 'album_id', label: 'Album', type: 'select', required: false,
                   dependsOn: 'artist_id',
                   optionsLoader: async (artistId) => {
-                    const { data: albums } = await supabase
+                    const { data: albums } = await this.supabase
                         .from('albums')
                         .select('id, title')
                         .eq('artist_id', artistId)
@@ -527,14 +633,16 @@ class AdminUI {
                         label: album.title
                     })) || [];
                 }},
-                { name: 'release_date', label: 'Release Date', type: 'date', required: true },
-                { name: 'type', label: 'Release Type', type: 'select', options: [
+                { name: 'track_number', label: 'Track Number', type: 'number', min: 1, required: false },
+                { name: 'type', label: 'Release Type', type: 'select', required: true, options: [
                     { value: 'album_track', label: 'Album Track' },
                     { value: 'single', label: 'Single' }
                 ]},
-                { name: 'cover', label: 'Song Cover', type: 'file', accept: 'image/*' },
-                { name: 'audio', label: 'Audio File', type: 'file', accept: 'audio/*', required: true },
-                { name: 'duration', label: 'Duration', type: 'text', required: true },
+                { name: 'cover', label: 'Song Cover', type: 'file', accept: 'image/*', maxSize: 5242880 }, // 5MB limit
+                { name: 'audio', label: 'Audio File (WAV, max 40MB)', type: 'file', 
+                  accept: 'audio/wav,audio/x-wav', required: true, maxSize: 41943040 }, // 40MB limit
+                { name: 'duration', label: 'Duration (mm:ss)', type: 'text', required: true, 
+                  pattern: '^([0-5][0-9]):([0-5][0-9])$', placeholder: '03:45' },
                 { name: 'status', label: 'Status', type: 'select', required: true, options: [
                     { value: 'published', label: 'Published' },
                     { value: 'draft', label: 'Draft' }
@@ -644,17 +752,27 @@ class AdminUI {
             ],
 
             ad: [
-                { name: 'title', label: 'Ad Title', type: 'text', required: true },
+                { name: 'title', label: 'Ad Title', type: 'text', required: true, maxLength: 100 },
                 { name: 'advertiser', label: 'Advertiser', type: 'text', required: true },
                 { name: 'description', label: 'Description', type: 'textarea' },
-                { name: 'audio', label: 'Audio File', type: 'file', accept: 'audio/*', required: true },
-                { name: 'target_audience', label: 'Target Audience', type: 'tags' },
-                { name: 'regions', label: 'Target Regions', type: 'tags' },
+                { name: 'audio', label: 'Audio File', type: 'file', 
+                  accept: 'audio/*', required: true, maxSize: 5242880 }, // 5MB limit
+                { name: 'duration', label: 'Duration (mm:ss)', type: 'text', required: true,
+                  pattern: '^([0-5][0-9]):([0-5][0-9])$', placeholder: '00:30' },
+                { name: 'click_url', label: 'Click URL', type: 'url', 
+                  placeholder: 'https://' },
+                { name: 'target_audience', label: 'Target Audience', type: 'tags',
+                  placeholder: 'Add audience tags' },
+                { name: 'regions', label: 'Target Regions', type: 'tags',
+                  placeholder: 'Add region codes' },
+                { name: 'frequency', label: 'Plays per Hour', type: 'number', 
+                  min: 1, max: 12, default: 1 },
+                { name: 'daily_budget', label: 'Daily Budget ($)', type: 'number',
+                  min: 0, step: '0.01' },
+                { name: 'total_budget', label: 'Total Budget ($)', type: 'number',
+                  min: 0, step: '0.01' },
                 { name: 'start_date', label: 'Start Date', type: 'datetime-local' },
                 { name: 'end_date', label: 'End Date', type: 'datetime-local' },
-                { name: 'frequency', label: 'Frequency per Hour', type: 'number', min: 1, max: 12 },
-                { name: 'daily_budget', label: 'Daily Budget', type: 'number', step: '0.01' },
-                { name: 'total_budget', label: 'Total Budget', type: 'number', step: '0.01' },
                 { name: 'status', label: 'Status', type: 'select', required: true,
                   options: [
                     { value: 'active', label: 'Active' },
@@ -1091,6 +1209,114 @@ class AdminUI {
                 return playlist;
             } catch (error) {
                 console.error('Playlist creation error:', error);
+                throw error;
+            }
+        }
+
+        if (type === 'song') {
+            try {
+                // Validate file sizes
+                const audioFile = formData.get('audio');
+                const coverFile = formData.get('cover');
+                
+                if (audioFile?.size > 41943040) throw new Error('Audio file must be less than 40MB');
+                if (coverFile?.size > 5242880) throw new Error('Cover image must be less than 5MB');
+
+                // Handle file uploads first
+                let audioUrl = null;
+                let coverUrl = null;
+
+                if (audioFile?.size > 0) {
+                    audioUrl = await uploadAudio(audioFile, 'songs');
+                }
+
+                if (coverFile?.size > 0) {
+                    coverUrl = await uploadImage(coverFile, 'songs');
+                }
+
+                // Validate duration format
+                const duration = formData.get('duration');
+                if (!/^([0-5][0-9]):([0-5][0-9])$/.test(duration)) {
+                    throw new Error('Duration must be in mm:ss format (e.g. 03:45)');
+                }
+
+                const songData = {
+                    title: formData.get('title')?.trim(),
+                    artist_id: formData.get('artist_id'),
+                    album_id: formData.get('album_id') || null,
+                    track_number: parseInt(formData.get('track_number')) || null,
+                    audio_url: audioUrl,
+                    cover_url: coverUrl,
+                    duration: `00:${duration}`,
+                    type: formData.get('type'),
+                    status: formData.get('status') || 'published'
+                };
+
+                // Validate required fields
+                if (!songData.title) throw new Error('Title is required');
+                if (!songData.artist_id) throw new Error('Artist is required');
+                if (!songData.audio_url) throw new Error('Audio file is required');
+
+                const { data: song, error } = await this.supabase
+                    .from('songs')
+                    .insert([songData])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                return song;
+            } catch (error) {
+                console.error('Song creation error:', error);
+                throw error;
+            }
+        }
+
+        if (type === 'ad') {
+            try {
+                // Handle audio upload
+                const audioFile = formData.get('audio');
+                let audioUrl = null;
+
+                if (audioFile?.size > 0) {
+                    audioUrl = await uploadAudio(audioFile, 'ads');
+                }
+
+                // Process duration to interval format
+                const duration = formData.get('duration');
+                if (!/^([0-5][0-9]):([0-5][0-9])$/.test(duration)) {
+                    throw new Error('Duration must be in mm:ss format');
+                }
+                
+                // Process tags
+                const targetAudience = formData.get('target_audience')?.split(',')
+                    .map(t => t.trim()).filter(t => t) || [];
+                const regions = formData.get('regions')?.split(',')
+                    .map(r => r.trim()).filter(r => r) || [];
+
+                const adData = {
+                    title: formData.get('title')?.trim(),
+                    advertiser: formData.get('advertiser')?.trim(),
+                    audio_url: audioUrl,
+                    click_url: formData.get('click_url')?.trim() || null,
+                    duration: `00:${duration}`,
+                    status: formData.get('status'),
+                    target_audience: targetAudience,
+                    regions: regions,
+                    frequency: parseInt(formData.get('frequency')) || 1,
+                    daily_budget: parseFloat(formData.get('daily_budget')) || null,
+                    total_budget: parseFloat(formData.get('total_budget')) || null,
+                    start_date: formData.get('start_date') || null,
+                    end_date: formData.get('end_date') || null
+                };
+
+                // Validate required fields
+                if (!adData.title) throw new Error('Title is required');
+                if (!adData.advertiser) throw new Error('Advertiser is required');
+                if (!adData.audio_url) throw new Error('Audio file is required');
+
+                return adData;
+            } catch (error) {
+                console.error('Ad processing error:', error);
                 throw error;
             }
         }

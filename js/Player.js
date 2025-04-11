@@ -23,6 +23,8 @@ export class Player {
         this.pendingTrack = null; // Track to play after ads
         this.pendingStartTime = 0; // Start time for pending track
         this.DEFAULT_COVER = 'https://d2zcpib8duehag.cloudfront.net/xmdiscover-default-cover.png';
+        this.wakeLock = null;
+        this.setupVisibilityHandling();
 
         // Initialize player elements
         this.elements = {
@@ -250,6 +252,32 @@ export class Player {
         });
     }
 
+    setupVisibilityHandling() {
+        if ('wakeLock' in navigator) {
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible' && this.isPlaying) {
+                    try {
+                        this.wakeLock = await navigator.wakeLock.request('screen');
+                    } catch (err) {
+                        // Silently handle wake lock errors
+                        console.log('Wake Lock error:', err.name, err.message);
+                    }
+                }
+            });
+        }
+    }
+
+    async requestWakeLock() {
+        if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+            try {
+                this.wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                // Silently handle wake lock errors
+                console.log('Wake Lock error:', err.name, err.message);
+            }
+        }
+    }
+
     updateProgress(e) {
         const rect = this.elements.progressBar.getBoundingClientRect();
         const percent = Math.min(Math.max(0, (e.clientX - rect.left) / rect.width), 1);
@@ -462,11 +490,33 @@ export class Player {
                 // Handle podcast save action
                 likeBtn.onclick = () => this.savePodcastEpisode();
             } else {
-                likeBtn.innerHTML = '<i class="ri-heart-3-line"></i>';
+                // Update like button status
+                this.updateLikeButtonStatus(likeBtn);
                 likeBtn.setAttribute('aria-label', 'Like');
                 // Restore original like functionality
                 likeBtn.onclick = () => this.likeTrack();
             }
+        }
+    }
+
+    async updateLikeButtonStatus(likeBtn) {
+        if (!this.currentTrack?.id) return;
+        
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const { data } = await supabase
+                .from('likes')
+                .select('id')
+                .eq('user_id', session.user.id)
+                .eq('song_id', this.currentTrack.id)
+                .single();
+
+            const icon = likeBtn.querySelector('i');
+            icon.className = data ? 'ri-heart-3-fill' : 'ri-heart-3-line';
+        } catch (error) {
+            console.error('Failed to check like status:', error);
         }
     }
 
@@ -506,6 +556,46 @@ export class Player {
         } catch (error) {
             console.error('Failed to save/remove episode:', error);
             notifications.show('Failed to update saved episodes', 'error');
+        }
+    }
+
+    async likeTrack() {
+        if (!this.currentTrack?.id) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            notifications.show('Please log in to like tracks', 'error');
+            return;
+        }
+
+        const likeBtn = document.querySelector('.xm-btn.like');
+        const icon = likeBtn.querySelector('i');
+        const isLiked = icon.classList.contains('ri-heart-3-fill');
+
+        try {
+            if (isLiked) {
+                await supabase
+                    .from('likes')
+                    .delete()
+                    .eq('user_id', session.user.id)
+                    .eq('song_id', this.currentTrack.id);
+
+                icon.className = 'ri-heart-3-line';
+                notifications.show('Removed from your liked songs', 'info');
+            } else {
+                await supabase
+                    .from('likes')
+                    .insert([{
+                        user_id: session.user.id,
+                        song_id: this.currentTrack.id
+                    }]);
+
+                icon.className = 'ri-heart-3-fill';
+                notifications.show('Added to your liked songs', 'success');
+            }
+        } catch (error) {
+            console.error('Failed to update like:', error);
+            notifications.show('Failed to update like status', 'error');
         }
     }
 
@@ -901,12 +991,17 @@ export class Player {
         
         try {
             const lyrics = await getLyrics(this.currentTrack.title, this.currentTrack.artist);
-            this.elements.lyricsContent.innerHTML = lyrics ? 
-                `<div class="lyrics-text">${lyrics}</div>` : 
-                '<p class="no-lyrics">No lyrics available</p>';
+            if (lyrics) {
+                this.elements.lyricsContent.innerHTML = lyrics
+                    .split('\n')
+                    .map(line => `<p>${line || '&nbsp;'}</p>`)
+                    .join('');
+            } else {
+                this.elements.lyricsContent.innerHTML = '<p class="no-lyrics">No lyrics found</p>';
+            }
         } catch (error) {
-            console.error('Failed to load lyrics:', error);
-            this.elements.lyricsContent.innerHTML = '<p class="lyrics-error">Failed to load lyrics</p>';
+            console.error('Failed to update lyrics:', error);
+            this.elements.lyricsContent.innerHTML = '<p class="lyrics-error">Unable to load lyrics</p>';
         }
     }
 

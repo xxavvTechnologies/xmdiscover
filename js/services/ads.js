@@ -21,12 +21,14 @@ export class AdService {
                 return false;
             }
 
-            // Get active ads with better error handling
+            // Get active ads
             const { data: ads, error } = await supabase
                 .from('ads')
                 .select('*')
                 .eq('status', 'active')
-                .lte('daily_budget', supabase.sql`COALESCE((SELECT SUM(daily_budget) FROM ads WHERE status = 'active'), 0)`)
+                // Only get ads that haven't exceeded their budget
+                .filter('daily_budget', 'gte', 0)
+                .filter('total_budget', 'gte', 0)
                 .order('play_count', { ascending: true })
                 .limit(5);
 
@@ -42,9 +44,8 @@ export class AdService {
 
             // Filter ads by region and budget
             activeAds = activeAds.filter(ad => {
-                const withinBudget = !ad.daily_budget || ad.impressions * ad.daily_budget < ad.total_budget;
                 const validRegion = !ad.regions?.length || this.isValidRegion(ad.regions);
-                return withinBudget && validRegion;
+                return validRegion;
             });
 
             // Create ad container
@@ -64,10 +65,6 @@ export class AdService {
             `;
             document.body.appendChild(adContainer);
 
-            // Add random delay to avoid automated detection
-            const randomDelay = Math.floor(Math.random() * 500) + 100;
-            await new Promise(resolve => setTimeout(resolve, randomDelay));
-
             let totalDuration = 0;
             let playedCount = 0;
             const startTime = Date.now();
@@ -84,19 +81,19 @@ export class AdService {
                     playedCount++;
 
                     if (totalDuration >= minDuration) {
-                        // If we've hit minimum duration, optionally play one more ad
-                        // unless it would exceed max duration
                         if (i < activeAds.length - 1) {
-                            const nextAdEstDuration = 15000; // Assume 15s for next ad
+                            const nextAdEstDuration = 15000;
                             if (totalDuration + nextAdEstDuration > maxDuration) break;
                         }
                     }
 
-                    // Only update play count for real ads
+                    // Update play count and impression
                     if (activeAds[i].id !== 'test-ad') {
-                        await supabase
-                            .from('ads')
-                            .update({ play_count: activeAds[i].play_count + 1 })
+                        await supabase.from('ads')
+                            .update({ 
+                                play_count: (activeAds[i].play_count || 0) + 1,
+                                impressions: (activeAds[i].impressions || 0) + 1 
+                            })
                             .eq('id', activeAds[i].id);
                     }
                 } catch (err) {

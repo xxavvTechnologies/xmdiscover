@@ -108,15 +108,14 @@ export class AdManager {
         const timeLeft = this.getTimeLeft();
         this.log(`Time left in grace period: ${timeLeft}s`);
 
-        // Check grace period unless forced
         if (timeLeft > 0 && reason !== 'force') {
             this.log(`Still in grace period (${timeLeft}s remaining)`);
             return false;
         }
 
+        let shouldPlayAds = false;
         const now = Date.now();
         const timeSinceLastAd = now - this.lastAdTime;
-        let shouldPlayAds = false;
 
         switch (reason) {
             case 'interval':
@@ -139,41 +138,34 @@ export class AdManager {
         if (shouldPlayAds) {
             this.log('Starting ad break');
             this.adBreakInProgress = true;
-            const startTime = Date.now();
 
             try {
-                const success = await AdService.playAdBreak(this.MIN_AD_BREAK, this.MAX_AD_BREAK);
+                const adBreakSuccess = await AdService.playAdBreak(this.MIN_AD_BREAK, this.MAX_AD_BREAK);
                 
-                if (success) {
+                if (adBreakSuccess) {
                     this.failedAttempts = 0;
                     this.lastAdBreakEnd = Date.now();
                     this.lastAdTime = Date.now();
                     await this.updateAdState(true);
-                    const duration = Math.round((Date.now() - startTime) / 1000);
-                    this.log(`Ad break completed successfully (${duration}s). Starting 30min grace period.`);
-                    
-                    // Handle pending track
-                    const player = window.xmPlayer;
-                    if (player?.pendingTrack) {
-                        this.log('Found pending track, resuming playback');
-                        requestAnimationFrame(async () => {
-                            await player.handleTrackEnded();
-                        });
-                    }
+                    const duration = Math.round((Date.now() - now) / 1000);
+                    this.log(`Ad break completed successfully (${duration}s). Starting grace period.`);
                 } else {
                     this.failedAttempts++;
                     await this.updateAdState(false);
                     this.log(`Ad break failed. Attempts: ${this.failedAttempts}/${this.MAX_FAILURES}`);
                 }
+
+                this.adBreakInProgress = false;
+                this.skippedTracks = 0;
+                return adBreakSuccess;
+
             } catch (error) {
                 this.log(`Ad break error: ${error.message}`);
                 this.failedAttempts++;
                 await this.updateAdState(false);
+                this.adBreakInProgress = false;
+                return false;
             }
-
-            this.adBreakInProgress = false;
-            this.skippedTracks = 0;
-            return success;
         }
 
         return false;

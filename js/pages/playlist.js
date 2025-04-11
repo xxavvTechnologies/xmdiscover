@@ -48,12 +48,16 @@ class PlaylistPage {
         const { data: likes, error } = await supabase
             .from('likes')
             .select(`
-                songs (
+                song:song_id (
                     id,
                     title,
                     duration,
+                    audio_url,
                     cover_url,
-                    artists (name)
+                    artists (
+                        id,
+                        name
+                    )
                 )
             `)
             .eq('user_id', session.user.id)
@@ -64,8 +68,18 @@ class PlaylistPage {
             throw error;
         }
 
-        const tracks = likes?.map(like => like.songs).filter(Boolean);
-        this.updateSystemPlaylistUI('Liked Songs', 'Your favorite tracks', tracks);
+        // Process the tracks for UI display
+        const tracks = likes?.map(like => ({
+            id: like.song.id,
+            title: like.song.title,
+            duration: like.song.duration,
+            audioUrl: like.song.audio_url,
+            coverUrl: like.song.cover_url,
+            artist: like.song.artists.name,
+            artistId: like.song.artists.id
+        }));
+
+        this.updateSystemPlaylistUI('Liked Songs', 'Your favorite tracks', tracks || []);
     }
 
     async loadRecentlyPlayed() {
